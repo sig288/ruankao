@@ -45,6 +45,18 @@ const routes = [
     meta: { requiresAuth: true, title: '掌握度统计' },
   },
   {
+    path: '/materials',
+    name: 'Materials',
+    component: () => import('@/views/MaterialsView.vue'),
+    meta: { requiresAuth: true, title: '我的资料库' },
+  },
+  {
+    path: '/plan',
+    name: 'StudyPlan',
+    component: () => import('@/views/StudyPlanView.vue'),
+    meta: { requiresAuth: true, title: '备考计划' },
+  },
+  {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/Admin.vue'),

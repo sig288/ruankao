@@ -11,6 +11,15 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_PASSWORD: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
     DEFAULT_AGENT_KEY: str = os.getenv("DEFAULT_AGENT_KEY", "")
 
+    # DeepSeek AI Configuration (v3 MVP)
+    DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    AI_DAILY_QUOTA: int = int(os.getenv("AI_DAILY_QUOTA", "30"))
+
+    # User Study Materials
+    MATERIALS_DIR: str = os.getenv("MATERIALS_DIR", "./data/materials")
+
     class Config:
         case_sensitive = True
 

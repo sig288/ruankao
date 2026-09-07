@@ -1,89 +1,129 @@
 <template>
-  <div class="p-4 space-y-4">
-    <!-- Top Summary Card -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-      <h2 class="text-sm font-black text-slate-800">软考掌握度评估</h2>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100">
-          <div class="text-[11px] text-blue-600 font-bold">综合正确率</div>
-          <div class="text-2xl font-black text-blue-900 mt-1">{{ stats.overall_accuracy }}%</div>
-          <div class="text-[10px] text-blue-500 mt-0.5">及格线参考：60%</div>
+  <div class="p-4 space-y-4 pb-24">
+    <!-- Readiness Score Card -->
+    <div class="bg-gradient-to-br from-indigo-600 via-blue-600 to-sky-600 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+      <div class="relative z-10 flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-medium tracking-wider uppercase opacity-85">第3版大纲 · 综合备考胜率指数</span>
+          <div class="flex items-baseline space-x-1.5 mt-1">
+            <span class="text-4xl font-black tracking-tight font-mono">{{ masteryData?.overall_readiness ?? 0 }}</span>
+            <span class="text-sm font-semibold opacity-90">/ 100</span>
+          </div>
+          <p class="text-xs opacity-75 mt-1">
+            已覆盖 {{ masteryData?.total_practiced ?? 0 }} 题 · 题库总量 {{ masteryData?.total_in_bank ?? 0 }} 题
+          </p>
         </div>
 
-        <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100">
-          <div class="text-[11px] text-indigo-600 font-bold">累计做题量</div>
-          <div class="text-2xl font-black text-indigo-900 mt-1">{{ stats.total_answered }}</div>
-          <div class="text-[10px] text-indigo-500 mt-0.5">正确 {{ stats.correct_answered }} 题</div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 text-slate-500">
-        <span>已记录错题总数：<b class="text-slate-700">{{ stats.total_wrong }}</b></span>
-        <span>待消灭攻坚：<b class="text-rose-600">{{ stats.unmastered_wrong }}</b></span>
-      </div>
-    </div>
-
-    <!-- Chapter Breakdown Progress Bars -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-      <div class="flex items-center justify-between">
-        <h3 class="text-xs font-bold text-slate-800 uppercase">各知识领域掌握度</h3>
-        <span class="text-[11px] text-slate-400">正确率诊断</span>
-      </div>
-
-      <div v-if="stats.chapter_breakdown.length === 0" class="text-center py-6 text-xs text-slate-400">
-        暂无章节做题数据，快去「章节练」开启刷题吧！
-      </div>
-
-      <div v-else class="space-y-3 pt-1">
-        <div v-for="ch in stats.chapter_breakdown" :key="ch.chapter" class="space-y-1">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-700">{{ ch.chapter }}</span>
-            <span class="text-slate-500 font-mono text-[11px]">
-              {{ ch.correct }}/{{ ch.total }} (<b :class="getRateColor(ch.accuracy)">{{ ch.accuracy }}%</b>)
-            </span>
-          </div>
-
-          <!-- Progress bar -->
-          <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div
-              class="h-2 rounded-full transition-all duration-500"
-              :class="getBarColor(ch.accuracy)"
-              :style="{ width: `${Math.min(ch.accuracy, 100)}%` }"
-            ></div>
-          </div>
+        <div class="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center font-bold text-lg bg-white/10 backdrop-blur-md">
+          {{ getReadinessGrade(masteryData?.overall_readiness || 0) }}
         </div>
       </div>
     </div>
 
-    <!-- Past Mock Exams History -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-      <h3 class="text-xs font-bold text-slate-800 uppercase">历次机考模考记录</h3>
-
-      <div v-if="examHistory.length === 0" class="text-center py-6 text-xs text-slate-400">
-        暂无模考记录
+    <!-- P0 Highlight: Weakness-driven Practice Banner (M5) -->
+    <div class="bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between">
+      <div class="space-y-0.5">
+        <div class="flex items-center space-x-1.5">
+          <span class="text-base">🎯</span>
+          <h3 class="text-sm font-bold">薄弱点精准突击组卷</h3>
+        </div>
+        <p class="text-xs opacity-90">
+          检测到 {{ masteryData?.weak_chapters?.length || 0 }} 个薄弱知识领域，智能组装 10 题靶向专项练
+        </p>
       </div>
 
-      <div v-else class="space-y-2.5 divide-y divide-slate-100">
-        <div v-for="ex in examHistory" :key="ex.id" class="pt-2.5 first:pt-0 flex items-center justify-between text-xs">
-          <div>
-            <div class="font-bold text-slate-800">
-              {{ ex.subject === 'basic' ? '基础知识单选题' : '案例分析专题' }}
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5">
-              {{ formatDate(ex.created_at) }} · 用时 {{ Math.floor(ex.time_spent / 60) }}分
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="font-black text-sm" :class="ex.score >= ex.total_score * 0.6 ? 'text-emerald-600' : 'text-rose-600'">
-              {{ ex.score }} <span class="text-[10px] font-normal text-slate-400">/ {{ ex.total_score }}</span>
-            </div>
+      <button
+        @click="startWeakDrill"
+        :disabled="drillLoading"
+        class="px-3.5 py-2 bg-white text-rose-600 rounded-xl text-xs font-bold shadow-md hover:bg-rose-50 active:scale-95 transition-all whitespace-nowrap"
+      >
+        {{ drillLoading ? '组卷中...' : '立即开练 →' }}
+      </button>
+    </div>
+
+    <!-- Dimension Toggle: 17 Chapters vs 10 Domains -->
+    <div class="bg-slate-200 dark:bg-slate-700 p-1 rounded-xl flex space-x-1">
+      <button
+        @click="activeDimension = 'chapters'"
+        class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all"
+        :class="activeDimension === 'chapters' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-300'"
+      >
+        按 17 章大纲维度 ({{ masteryData?.chapters?.length || 0 }})
+      </button>
+      <button
+        @click="activeDimension = 'domains'"
+        class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all"
+        :class="activeDimension === 'domains' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-300'"
+      >
+        按 十大管理领域 ({{ masteryData?.domains?.length || 0 }})
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" class="py-12 text-center text-slate-400 text-xs">
+      正在计算您的各考点掌握度模型...
+    </div>
+
+    <!-- Mastery Item List -->
+    <div v-else class="space-y-3">
+      <div
+        v-for="item in currentList"
+        :key="item.name"
+        class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm space-y-2.5 transition-all"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
             <span
-              class="text-[9px] px-1.5 py-0.2 rounded font-bold"
-              :class="ex.score >= ex.total_score * 0.6 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
+              class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase"
+              :class="getLevelBadgeClass(item.level)"
             >
-              {{ ex.score >= ex.total_score * 0.6 ? '及格' : '需强化' }}
+              {{ getLevelText(item.level) }}
             </span>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-white">{{ item.name }}</h4>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <span v-if="item.trend_7d !== undefined && item.trend_7d !== 0" class="text-[10px] font-medium" :class="item.trend_7d > 0 ? 'text-emerald-500' : 'text-rose-500'">
+              {{ item.trend_7d > 0 ? '↑ +' : '↓ ' }}{{ Math.round(item.trend_7d * 100) }}% 7天趋势
+            </span>
+            <router-link
+              :to="`/practice?chapter=${encodeURIComponent(item.name)}`"
+              class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            >
+              练本章 →
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Metrics Progress -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+              <span>覆盖度</span>
+              <span class="font-mono">{{ item.practiced_questions }}/{{ item.total_questions }} ({{ Math.round((item.coverage_rate || 0) * 100) }}%)</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div
+                class="bg-blue-600 h-full rounded-full"
+                :style="{ width: `${Math.min(100, Math.round((item.coverage_rate || 0) * 100))}%` }"
+              ></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+              <span>正确率 (30天)</span>
+              <span class="font-mono">
+                {{ item.accuracy_rate !== null ? `${Math.round(item.accuracy_rate * 100)}%` : '未答' }}
+              </span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full"
+                :class="item.accuracy_rate && item.accuracy_rate >= 0.8 ? 'bg-emerald-500' : item.accuracy_rate && item.accuracy_rate >= 0.6 ? 'bg-amber-500' : 'bg-rose-500'"
+                :style="{ width: `${item.accuracy_rate !== null ? Math.round(item.accuracy_rate * 100) : 0}%` }"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
@@ -92,46 +132,72 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { wrongBookApi, examApi } from '@/api'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { masteryApi } from '@/api'
+import { haptics } from '@/utils/haptics'
 
-const stats = ref<any>({
-  total_answered: 0,
-  correct_answered: 0,
-  overall_accuracy: 0,
-  total_wrong: 0,
-  unmastered_wrong: 0,
-  chapter_breakdown: [],
+const router = useRouter()
+const loading = ref(false)
+const drillLoading = ref(false)
+const activeDimension = ref<'chapters' | 'domains'>('chapters')
+const masteryData = ref<any>(null)
+
+const currentList = computed(() => {
+  if (!masteryData.value) return []
+  return activeDimension.value === 'chapters'
+    ? masteryData.value.chapters
+    : masteryData.value.domains
 })
 
-const examHistory = ref<any[]>([])
+onMounted(() => {
+  fetchMastery()
+})
 
-function getRateColor(rate: number) {
-  if (rate >= 75) return 'text-emerald-600'
-  if (rate >= 60) return 'text-blue-600'
-  return 'text-rose-600'
-}
-
-function getBarColor(rate: number) {
-  if (rate >= 75) return 'bg-emerald-500'
-  if (rate >= 60) return 'bg-blue-500'
-  return 'bg-rose-500'
-}
-
-function formatDate(dtStr: string) {
-  if (!dtStr) return ''
-  const d = new Date(dtStr)
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-}
-
-onMounted(async () => {
+async function fetchMastery() {
+  loading.value = true
   try {
-    const s: any = await wrongBookApi.getStatistics()
-    stats.value = s
-    const ex: any = await examApi.history()
-    examHistory.value = ex
-  } catch (err) {
-    console.error('Failed to load statistics', err)
+    const res = await masteryApi.getMe() as any
+    masteryData.value = res
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
   }
-})
+}
+
+async function startWeakDrill() {
+  haptics.click()
+  drillLoading.value = true
+  try {
+    // Jump to practice in weak mode
+    router.push('/practice?mode=weak')
+  } catch (e: any) {
+    alert(e.message || '组卷失败')
+  } finally {
+    drillLoading.value = false
+  }
+}
+
+function getReadinessGrade(score: number): string {
+  if (score >= 85) return 'A+'
+  if (score >= 70) return 'A'
+  if (score >= 60) return 'B'
+  if (score >= 45) return '及格'
+  return '待冲刺'
+}
+
+function getLevelText(level: string): string {
+  if (level === 'strong') return '强项'
+  if (level === 'medium') return '中等'
+  if (level === 'weak') return '薄弱'
+  return '未练'
+}
+
+function getLevelBadgeClass(level: string): string {
+  if (level === 'strong') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+  if (level === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+  if (level === 'weak') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 animate-pulse'
+  return 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
+}
 </script>

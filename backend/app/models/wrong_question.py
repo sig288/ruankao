@@ -25,4 +25,5 @@ class WrongQuestion(Base):
     wrong_count = Column(Integer, default=1, nullable=False)
     is_mastered = Column(Boolean, default=False, nullable=False)
     agent_explanation = Column(Text, nullable=True)  # Callback explanation summary from Agent
+    ai_mnemonic = Column(Text, nullable=True)  # DeepSeek memory formula / mnemonic
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

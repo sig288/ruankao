@@ -30,6 +30,50 @@
       </div>
     </div>
 
+    <!-- 14天倒计时与今日备考计划卡片 -->
+    <div v-if="plan" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-sm border border-indigo-800/40">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs px-2 py-0.5 bg-indigo-500/30 text-indigo-200 rounded-full font-semibold border border-indigo-400/30">
+            ⏳ 备考计划
+          </span>
+          <span class="text-xs text-indigo-300">目标: {{ plan.exam_date }}</span>
+        </div>
+        <router-link to="/plan" class="text-xs text-indigo-300 hover:text-white flex items-center space-x-0.5">
+          <span>进入学习计划</span>
+          <span>›</span>
+        </router-link>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-300">距离考试仅剩</div>
+          <div class="text-2xl font-extrabold font-mono text-amber-400">{{ plan.days_remaining }} <span class="text-xs font-normal text-slate-300">天</span></div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-slate-300">今日打卡进度</div>
+          <div class="text-sm font-bold font-mono text-emerald-400">
+            {{ completedTodayCount }} / {{ plan.today_tasks?.length || 0 }} 项
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Today Tasks list -->
+      <div v-if="plan.today_tasks && plan.today_tasks.length > 0" class="mt-3 pt-3 border-t border-indigo-900/60 space-y-1.5">
+        <div
+          v-for="task in plan.today_tasks.slice(0, 2)"
+          :key="task.id"
+          class="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-white/5"
+        >
+          <div class="flex items-center space-x-2 truncate">
+            <span :class="task.is_completed ? 'text-emerald-400' : 'text-slate-400'">{{ task.is_completed ? '✓' : '○' }}</span>
+            <span class="truncate" :class="{ 'line-through text-slate-400': task.is_completed }">{{ task.title }}</span>
+          </div>
+          <span class="text-[10px] text-indigo-300 shrink-0 font-mono">{{ task.estimated_minutes }}分钟</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Core Entry Cards -->
     <div class="grid grid-cols-2 gap-3">
       <!-- 章节精练 -->
@@ -45,6 +89,23 @@
         <div>
           <h3 class="text-sm font-bold text-slate-800">章节专项练</h3>
           <p class="text-[11px] text-slate-500 mt-0.5">十大知识领域细化刷题</p>
+        </div>
+      </router-link>
+
+      <!-- 薄弱点精准突击 (P0) -->
+      <router-link
+        to="/practice?mode=weak"
+        class="bg-gradient-to-br from-rose-500/10 to-amber-500/10 p-4 rounded-2xl border border-rose-200 shadow-sm flex flex-col justify-between hover:border-rose-300 transition-all active:scale-[0.98]"
+      >
+        <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center mb-3 shadow-sm">
+          <span class="text-lg">🔥</span>
+        </div>
+        <div>
+          <div class="flex items-center space-x-1">
+            <h3 class="text-sm font-bold text-rose-900">薄弱点突击</h3>
+            <span class="text-[9px] px-1 py-0.2 bg-rose-600 text-white rounded font-bold">P0</span>
+          </div>
+          <p class="text-[11px] text-rose-600/80 mt-0.5">算法动态组卷专攻错题弱项</p>
         </div>
       </router-link>
 
@@ -97,10 +158,48 @@
               {{ stats.unmastered_wrong }}
             </span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">支持外部AI助教讲解</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">支持 DeepSeek 助教拆解</p>
+        </div>
+      </router-link>
+
+      <!-- 我的资料库 (P1) -->
+      <router-link
+        to="/materials"
+        class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:border-purple-300 transition-all active:scale-[0.98]"
+      >
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-1">
+            <h3 class="text-sm font-bold text-slate-800">私有资料库</h3>
+            <span class="text-[9px] px-1 py-0.2 bg-purple-600 text-white rounded font-bold">P1</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">上传资料 & CSV转题库</p>
         </div>
       </router-link>
     </div>
+
+    <!-- 考点掌握度诊断 Banner (M4) -->
+    <router-link
+      to="/statistics"
+      class="block bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 rounded-2xl p-4 text-white shadow-sm hover:opacity-95 transition-all"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg">
+            📊
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white">考点掌握度诊断全景 (M4)</h4>
+            <p class="text-[11px] text-blue-100 mt-0.5">17章大纲 & 十大管理领域深度画像，自动识别考点盲区</p>
+          </div>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 bg-white/20 rounded-lg">查看 ›</span>
+      </div>
+    </router-link>
 
     <!-- Quick Knowledge Shortcuts -->
     <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
@@ -144,8 +243,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { wrongBookApi } from '@/api'
+import { ref, computed, onMounted } from 'vue'
+import { wrongBookApi, planApi } from '@/api'
 import { useAuthStore } from '@/store/auth'
 
 const authStore = useAuthStore()
@@ -154,6 +253,13 @@ const stats = ref({
   total_answered: 0,
   overall_accuracy: 0.0,
   unmastered_wrong: 0,
+})
+
+const plan = ref<any>(null)
+
+const completedTodayCount = computed(() => {
+  if (!plan.value?.today_tasks) return 0
+  return plan.value.today_tasks.filter((t: any) => t.is_completed).length
 })
 
 const highFreqTopics = [
@@ -171,6 +277,13 @@ onMounted(async () => {
     stats.value = res
   } catch (err) {
     console.error('Failed to load stats', err)
+  }
+
+  try {
+    const planRes: any = await planApi.getMe()
+    plan.value = planRes
+  } catch (err) {
+    console.error('Failed to load plan', err)
   }
 })
 </script>

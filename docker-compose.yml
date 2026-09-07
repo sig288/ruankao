@@ -13,6 +13,11 @@ services:
       - INITIAL_ADMIN_USERNAME=${INITIAL_ADMIN_USERNAME:-admin}
       - INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD}
       - DEFAULT_AGENT_KEY=${DEFAULT_AGENT_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - AI_DAILY_QUOTA=${AI_DAILY_QUOTA:-30}
+      - MATERIALS_DIR=${MATERIALS_DIR:-/app/data/materials}
     volumes:
       - ./data:/app/data
     expose:

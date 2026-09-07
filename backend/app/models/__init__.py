@@ -3,6 +3,9 @@ from app.models.question import Question
 from app.models.wrong_question import WrongQuestion
 from app.models.record import PracticeRecord, Favorite, ExamRecord
 from app.models.agent_key import AgentApiKey
+from app.models.ai_job import AiJob
+from app.models.material import Material
+from app.models.study_plan import StudyPlan
 
 __all__ = [
     "User",
@@ -11,5 +14,8 @@ __all__ = [
     "PracticeRecord",
     "Favorite",
     "ExamRecord",
-    "AgentApiKey"
+    "AgentApiKey",
+    "AiJob",
+    "Material",
+    "StudyPlan"
 ]

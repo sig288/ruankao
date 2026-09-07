@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api/v1'
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -81,4 +81,32 @@ export const adminApi = {
   createAgentKey: (name: string) => api.post('/admin/agent-keys', { name }),
   toggleAgentKey: (id: string) => api.post(`/admin/agent-keys/${id}/toggle`),
   deleteAgentKey: (id: string) => api.delete(`/admin/agent-keys/${id}`),
+}
+
+export const masteryApi = {
+  getMe: () => api.get('/mastery/me'),
+  weakDrill: (count: number = 10) => api.post('/mastery/weak-drill', { count }),
+}
+
+export const aiApi = {
+  getQuota: () => api.get('/ai/quota'),
+  createJob: (data: { question_id?: string; action_type: string; user_prompt?: string; user_context?: any }) =>
+    api.post('/ai/jobs', data),
+  getJob: (jobId: string) => api.get(`/ai/jobs/${jobId}`),
+}
+
+export const materialsApi = {
+  list: (params?: any) => api.get('/materials', { params }),
+  upload: (formData: FormData) =>
+    api.post('/materials', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  delete: (id: string) => api.delete(`/materials/${id}`),
+  convertToQuestions: (id: string) => api.post(`/materials/${id}/convert-questions`),
+}
+
+export const planApi = {
+  getMe: () => api.get('/plan/me'),
+  setConfig: (data: { exam_date: string; daily_minutes: number }) => api.post('/plan/config', data),
+  toggleTask: (taskId: string) => api.post(`/plan/tasks/${taskId}/toggle`),
 }

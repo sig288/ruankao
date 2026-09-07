@@ -25,6 +25,23 @@
       </div>
     </div>
 
+    <!-- Weak Drill CTA Banner -->
+    <div v-if="items.some(x => !x.is_mastered)" class="bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl p-3 text-white flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-2 text-xs">
+        <span class="text-base">🔥</span>
+        <div>
+          <div class="font-bold">错题专项靶向突击</div>
+          <div class="text-[10px] text-rose-100">自动抽选当前未消灭错题组卷实战</div>
+        </div>
+      </div>
+      <router-link
+        to="/practice?mode=weak"
+        class="px-3 py-1.5 bg-white text-rose-600 rounded-xl text-xs font-bold shadow hover:bg-rose-50 active:scale-95 transition-all"
+      >
+        去刷弱项
+      </router-link>
+    </div>
+
     <!-- Empty State -->
     <div v-if="loading" class="text-center py-16 text-slate-400 text-sm">
       正在检索错题本...
@@ -108,6 +125,12 @@
             {{ item.agent_explanation }}
           </div>
         </div>
+
+        <!-- DeepSeek AI Study Companion (M7 / A1~A3) -->
+        <AiAssistPanel
+          :question="item"
+          :user-answer="item.user_answer"
+        />
       </div>
     </div>
   </div>
@@ -116,6 +139,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { wrongBookApi } from '@/api'
+import AiAssistPanel from '@/components/AiAssistPanel.vue'
+import { haptics } from '@/utils/haptics'
 
 const items = ref<any[]>([])
 const loading = ref(false)
@@ -142,6 +167,7 @@ async function toggleMaster(item: any) {
     const newStatus = !item.is_mastered
     await wrongBookApi.toggleMaster(item.id, newStatus)
     item.is_mastered = newStatus
+    haptics.selection()
   } catch (err) {
     console.error('Toggle master failed', err)
   }
@@ -152,6 +178,7 @@ async function deleteWrong(id: string) {
   try {
     await wrongBookApi.deleteWrong(id)
     items.value = items.value.filter((x) => x.id !== id)
+    haptics.heavy()
   } catch (err) {
     console.error('Delete wrong failed', err)
   }

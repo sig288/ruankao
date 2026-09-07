@@ -29,13 +29,10 @@ dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 
-# OS & Editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Android & Gradle
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
+*.aab

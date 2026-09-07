@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.database import Base, engine, SessionLocal
 from app.services.seed_loader import init_seed_data
 
-from app.api.v1 import auth, questions, practice, exam, wrong_book, agent, admin
+from app.api.v1 import auth, questions, practice, exam, wrong_book, agent, admin, mastery, ai, materials, study_plan
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ruankao")
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="软考中项（系统集成项目管理工程师第3版）移动端刷题助手与外部Agent错题交互API",
-    version="1.0.0",
+    version="3.0.0",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
     lifespan=lifespan
@@ -42,6 +42,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # API Routers
@@ -50,7 +51,11 @@ app.include_router(auth.router, prefix=f"{api_v1}/auth", tags=["用户认证"])
 app.include_router(questions.router, prefix=f"{api_v1}/questions", tags=["题库查询"])
 app.include_router(practice.router, prefix=f"{api_v1}/practice", tags=["刷题与判分"])
 app.include_router(exam.router, prefix=f"{api_v1}/exam", tags=["模拟考试"])
-app.include_router(wrong_book.router, prefix=f"{api_v1}/wrong-book", tags=["错题本与掌握度"])
+app.include_router(wrong_book.router, prefix=f"{api_v1}/wrong-book", tags=["错题本"])
+app.include_router(mastery.router, prefix=f"{api_v1}/mastery", tags=["掌握度与薄弱推题"])
+app.include_router(ai.router, prefix=f"{api_v1}/ai", tags=["DeepSeek伴学"])
+app.include_router(materials.router, prefix=f"{api_v1}/materials", tags=["自有资料库"])
+app.include_router(study_plan.router, prefix=f"{api_v1}/plan", tags=["倒计时学习计划"])
 app.include_router(agent.router, prefix=f"{api_v1}/agent", tags=["外部Agent开放接口"])
 app.include_router(admin.router, prefix=f"{api_v1}/admin", tags=["管理后台"])
 
