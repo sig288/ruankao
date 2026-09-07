@@ -1,0 +1,15 @@
+{
+  "appId": "com.sig28.ruankao",
+  "appName": "软考中项刷题",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystoreAlias": ""
+    }
+  }
+}

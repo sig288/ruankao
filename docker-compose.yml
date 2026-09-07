@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  ruankao-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ruankao-backend
+    restart: always
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/ruankao.db}
+      - SECRET_KEY=${SECRET_KEY}
+      - INITIAL_ADMIN_USERNAME=${INITIAL_ADMIN_USERNAME:-admin}
+      - INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD}
+      - DEFAULT_AGENT_KEY=${DEFAULT_AGENT_KEY}
+    volumes:
+      - ./data:/app/data
+    expose:
+      - "8000"
+
+  ruankao-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ruankao-frontend
+    restart: always
+    ports:
+      - "8090:80"
+    depends_on:
+      - ruankao-backend
