@@ -6,6 +6,7 @@
 data/
 *.db
 *.sqlite3
+学习资料/
 
 # Python
 __pycache__/
