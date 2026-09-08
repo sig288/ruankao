@@ -3,8 +3,17 @@
 *.env.local
 
 # Database & Persistent storage
-data/
+/data/*
+!/data/learn/
+backend/data/*
+!backend/data/learn/
+!backend/data/learn/*
+!backend/data/materials/
+backend/data/materials/public/
+backend/data/materials/public/*
 *.db
+
+
 *.sqlite3
 学习资料/
 

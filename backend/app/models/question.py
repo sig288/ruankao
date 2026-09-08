@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, DateTime, JSON
+from sqlalchemy import Column, String, Text, DateTime, JSON, Boolean
 from app.database import Base
 
 def generate_qid():
@@ -18,6 +18,10 @@ class Question(Base):
     correct_answer = Column(Text, nullable=False)  # e.g. "B" or case reference answer
     analysis = Column(Text, nullable=True)  # Explanation
     rubrics = Column(JSON, nullable=True)  # Scoring rubrics for case questions: [{"point": "关键路径延长", "score": 2, "keywords": ["关键路径", "工期延长"]}]
+    knowledge_point_ids = Column(JSON, nullable=True)  # List[str] e.g. ["kp_evm_cpi"] for direct jump
+    glossary_ids = Column(JSON, nullable=True)  # List[str] e.g. ["term_evm"] for English term jump
+    is_english_term = Column(Boolean, default=False, nullable=False)  # Whether it's an English term question
     source = Column(String(32), default="ai-generated", nullable=False)
     difficulty = Column(String(16), default="medium")  # 'easy', 'medium', 'hard'
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+

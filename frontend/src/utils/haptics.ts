@@ -70,3 +70,13 @@ export const haptics = {
     }
   }
 }
+
+export function triggerHaptic(type: 'tap' | 'success' | 'error' | 'milestone' | 'selection' = 'tap') {
+  if (type === 'tap') haptics.click()
+  else if (type === 'success') haptics.correct()
+  else if (type === 'error') haptics.wrong()
+  else if (type === 'milestone') haptics.milestone()
+  else if (type === 'selection') haptics.selection()
+  else haptics.click()
+}
+

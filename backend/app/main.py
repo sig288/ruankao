@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.database import Base, engine, SessionLocal
 from app.services.seed_loader import init_seed_data
 
-from app.api.v1 import auth, questions, practice, exam, wrong_book, agent, admin, mastery, ai, materials, study_plan
+from app.api.v1 import auth, questions, practice, exam, wrong_book, agent, admin, mastery, ai, materials, study_plan, learn, glossary, app_version
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ruankao")
@@ -56,6 +56,9 @@ app.include_router(mastery.router, prefix=f"{api_v1}/mastery", tags=["掌握度�
 app.include_router(ai.router, prefix=f"{api_v1}/ai", tags=["DeepSeek伴学"])
 app.include_router(materials.router, prefix=f"{api_v1}/materials", tags=["自有资料库"])
 app.include_router(study_plan.router, prefix=f"{api_v1}/plan", tags=["倒计时学习计划"])
+app.include_router(learn.router, prefix=f"{api_v1}/learn", tags=["知识点学习"])
+app.include_router(glossary.router, prefix=f"{api_v1}/learn", tags=["英语术语词表"])
+app.include_router(app_version.router, prefix=f"{api_v1}/app", tags=["客户端版本与更新"])
 app.include_router(agent.router, prefix=f"{api_v1}/agent", tags=["外部Agent开放接口"])
 app.include_router(admin.router, prefix=f"{api_v1}/admin", tags=["管理后台"])
 

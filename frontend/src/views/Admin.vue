@@ -1,7 +1,6 @@
 <template>
-  <div class="p-4 space-y-4">
-    <!-- Header -->
-    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+  <div class="rk-page">
+    <div class="rk-card p-3.5 flex items-center justify-between">
       <div>
         <h2 class="text-sm font-black text-slate-800">系统管理中心</h2>
         <p class="text-[10px] text-slate-400">题库导入、状态监控与外部 Agent 密钥</p>

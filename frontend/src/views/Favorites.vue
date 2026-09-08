@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4 space-y-4">
-    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+  <div class="rk-page">
+    <div class="rk-card p-3.5 flex items-center justify-between">
       <div>
         <h2 class="text-sm font-black text-slate-800">我的收藏夹</h2>
         <p class="text-[10px] text-slate-400">重点题目随手收藏复习</p>

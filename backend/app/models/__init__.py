@@ -6,6 +6,7 @@ from app.models.agent_key import AgentApiKey
 from app.models.ai_job import AiJob
 from app.models.material import Material
 from app.models.study_plan import StudyPlan
+from app.models.learn import KnowledgeChapter, KnowledgePoint, UserPointStatus, GlossaryTerm, UserGlossaryStatus
 
 __all__ = [
     "User",
@@ -17,5 +18,10 @@ __all__ = [
     "AgentApiKey",
     "AiJob",
     "Material",
-    "StudyPlan"
+    "StudyPlan",
+    "KnowledgeChapter",
+    "KnowledgePoint",
+    "UserPointStatus",
+    "GlossaryTerm",
+    "UserGlossaryStatus"
 ]

@@ -8,14 +8,15 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'autoUpdate',
+      selfDestroying: true,
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'icon.svg'],
       manifest: {
         name: '软考中项刷题助手',
         short_name: '中项刷题',
         description: '软考中级系统集成项目管理工程师（第3版）移动端刷题助手',
-        theme_color: '#2563eb',
-        background_color: '#f8fafc',
+        theme_color: '#16382e',
+        background_color: '#16382e',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

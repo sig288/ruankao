@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     AI_DAILY_QUOTA: int = int(os.getenv("AI_DAILY_QUOTA", "30"))
 
     # User Study Materials
+    DATA_DIR: str = os.getenv("DATA_DIR", "./data")
     MATERIALS_DIR: str = os.getenv("MATERIALS_DIR", "./data/materials")
+
 
     class Config:
         case_sensitive = True

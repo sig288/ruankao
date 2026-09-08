@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 
 from app.database import get_db
 from app.models.user import User
@@ -15,6 +15,7 @@ router = APIRouter()
 @router.get("/wrong-questions")
 def get_user_wrong_questions(
     knowledge: Optional[str] = Query(None),
+    point_id: Optional[str] = Query(None),
     is_mastered: Optional[bool] = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -26,10 +27,57 @@ def get_user_wrong_questions(
         query = query.filter(WrongQuestion.knowledge == knowledge)
     if is_mastered is not None:
         query = query.filter(WrongQuestion.is_mastered == is_mastered)
-    
+
+    if point_id:
+        # Match questions linked to this point_id
+        matched_qids = [
+            q.id for q in db.query(Question.id, Question.knowledge_point_ids).all()
+            if q.knowledge_point_ids and point_id in q.knowledge_point_ids
+        ]
+        if matched_qids:
+            query = query.filter(WrongQuestion.question_id.in_(matched_qids))
+
     total = query.count()
-    items = query.order_by(WrongQuestion.answered_at.desc()).offset(offset).limit(limit).all()
-    return {"total": total, "items": items}
+    raw_items = query.order_by(WrongQuestion.answered_at.desc()).offset(offset).limit(limit).all()
+
+    # Enrich with knowledge_point_ids and glossary_ids from Question table
+    q_ids = [w.question_id for w in raw_items]
+    questions_map = {q.id: q for q in db.query(Question).filter(Question.id.in_(q_ids)).all()} if q_ids else {}
+
+    items = []
+    for w in raw_items:
+        q_obj = questions_map.get(w.question_id)
+        item_dict = {
+            "id": w.id,
+            "user_id": w.user_id,
+            "question_id": w.question_id,
+            "subject": w.subject,
+            "knowledge": w.knowledge,
+            "stem": w.stem,
+            "options": w.options,
+            "correct_answer": w.correct_answer,
+            "user_answer": w.user_answer,
+            "analysis": w.analysis,
+            "source": w.source,
+            "answered_at": w.answered_at,
+            "wrong_count": w.wrong_count,
+            "is_mastered": w.is_mastered,
+            "agent_explanation": w.agent_explanation,
+            "ai_mnemonic": w.ai_mnemonic,
+            "updated_at": w.updated_at,
+            "knowledge_point_ids": q_obj.knowledge_point_ids if q_obj and q_obj.knowledge_point_ids else [],
+            "glossary_ids": q_obj.glossary_ids if q_obj and q_obj.glossary_ids else []
+        }
+        items.append(item_dict)
+
+    # Distinct knowledge tags in user's wrong book for filtering dropdown
+    all_user_knowledges = [
+        r[0] for r in db.query(distinct(WrongQuestion.knowledge))
+        .filter(WrongQuestion.user_id == current_user.id)
+        .all() if r[0]
+    ]
+
+    return {"total": total, "items": items, "available_knowledges": all_user_knowledges}
 
 @router.post("/wrong-questions/{id}/master")
 def toggle_master_status(

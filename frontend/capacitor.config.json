@@ -2,11 +2,21 @@
   "appId": "com.sig28.ruankao",
   "appName": "软考中项刷题",
   "webDir": "dist",
+  "backgroundColor": "#16382e",
   "server": {
+    "url": "https://122.51.95.218/ruankao/",
     "androidScheme": "https",
     "cleartext": true
   },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#00000000"
+    }
+  },
   "android": {
+    "allowMixedContent": true,
     "buildOptions": {
       "keystorePath": "",
       "keystoreAlias": ""

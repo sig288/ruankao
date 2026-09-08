@@ -3,10 +3,14 @@ import csv
 import io
 import json
 import uuid
+import mimetypes
+from urllib.parse import quote
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.core.config import settings
 from app.database import get_db
@@ -27,26 +31,53 @@ class MaterialOut(BaseModel):
     file_size: int
     converted_question_count: int
     created_at: Any
+    is_public: bool = False
+    is_recommended: bool = False
+    sort_order: int = 0
+    description: Optional[str] = None
+    year: Optional[str] = None
+    download_url: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 @router.get("", response_model=List[MaterialOut])
 def list_materials(
-    category: Optional[str] = Query(None),
-    chapter: Optional[str] = Query(None),
+    scope: str = Query("public", description="查询范围：public (官方精选), private (私有资料), all (全部)"),
+    category: Optional[str] = Query(None, description="分类筛选"),
+    chapter: Optional[str] = Query(None, description="章节筛选"),
+    year: Optional[str] = Query(None, description="年份筛选"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """List private study materials for current user with filtering"""
-    query = db.query(Material).filter(Material.user_id == current_user.id)
+    """
+    获取资料清单：
+    - scope='public': 平台官方精选备考资料（思维导图、三色笔记、口诀表、机考指南、真题等）
+    - scope='private': 当前用户自己上传的私有资料
+    - scope='all': 两者合集
+    """
+    query = db.query(Material)
+    if scope == "public":
+        query = query.filter(Material.is_public == True)
+    elif scope == "private":
+        query = query.filter(Material.user_id == current_user.id, Material.is_public == False)
+    else:
+        query = query.filter(or_(Material.is_public == True, Material.user_id == current_user.id))
+
     if category:
         query = query.filter(Material.category == category)
     if chapter:
         query = query.filter(Material.chapter == chapter)
+    if year:
+        query = query.filter(Material.year == year)
 
-    materials = query.order_by(Material.created_at.desc()).all()
+    materials = query.order_by(
+        Material.is_recommended.desc(),
+        Material.sort_order.asc(),
+        Material.created_at.desc()
+    ).all()
     return materials
+
 
 @router.post("", response_model=MaterialOut)
 async def upload_material(
@@ -135,6 +166,86 @@ def delete_material(
     db.delete(mat)
     db.commit()
     return {"success": True, "message": "资料已安全删除"}
+
+@router.get("/manifest/stats")
+def get_manifest_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取全量资料库统计与层级导航元数据（涵盖 460+ 文件）
+    """
+    manifest_candidates = [
+        os.path.join(settings.DATA_DIR, "materials", "materials_manifest.json"),
+        os.path.join(os.path.dirname(settings.DATA_DIR), "backend", "data", "materials", "materials_manifest.json"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "materials", "materials_manifest.json"),
+        "backend/data/materials/materials_manifest.json"
+    ]
+    for p in manifest_candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                by_category = {}
+                by_year = {}
+                total_size = 0
+                for item in data:
+                    cat = item.get("category", "其他")
+                    by_category[cat] = by_category.get(cat, 0) + 1
+                    yr = item.get("year", "未知")
+                    by_year[yr] = by_year.get(yr, 0) + 1
+                    total_size += item.get("file_size", 0)
+
+                return {
+                    "total_files": len(data),
+                    "total_size_mb": round(total_size / (1024 * 1024), 2),
+                    "by_category": by_category,
+                    "by_year": by_year,
+                    "categories": list(by_category.keys())
+                }
+            except Exception:
+                pass
+
+    return {"total_files": 0, "total_size_mb": 0, "by_category": {}, "by_year": {}}
+
+@router.get("/{id}/file")
+def get_material_file(
+    id: str,
+    inline: bool = Query(False, description="是否在线预览（True为inline，False为attachment下载）"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    下载或在线预览资料底层文件（PDF、XLS、图片等）
+    """
+    mat = db.query(Material).filter(Material.id == id).first()
+    if not mat:
+        raise HTTPException(status_code=404, detail="资料不存在")
+
+    if not mat.is_public and mat.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="无权访问该私有资料")
+
+    if not os.path.exists(mat.file_path):
+        raise HTTPException(status_code=404, detail="底层物理文件不存在")
+
+    content_type, _ = mimetypes.guess_type(mat.file_path)
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    filename = os.path.basename(mat.file_path)
+    encoded_filename = quote(filename)
+
+    headers = {}
+    if inline:
+        headers["Content-Disposition"] = f"inline; filename*=UTF-8''{encoded_filename}"
+    else:
+        headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
+
+    return FileResponse(
+        path=mat.file_path,
+        media_type=content_type,
+        headers=headers
+    )
+
 
 @router.post("/{id}/convert-questions")
 def convert_material_to_questions(

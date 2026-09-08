@@ -1,7 +1,8 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
+import { isNativeApp } from '@/version'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
@@ -48,13 +49,53 @@ const routes = [
     path: '/materials',
     name: 'Materials',
     component: () => import('@/views/MaterialsView.vue'),
-    meta: { requiresAuth: true, title: '我的资料库' },
+    meta: { requiresAuth: true, title: '备考文库' },
+  },
+  {
+    path: '/materials/:id/read',
+    name: 'MaterialRead',
+    component: () => import('@/views/MaterialReader.vue'),
+    meta: { requiresAuth: true, title: '在线阅读' },
   },
   {
     path: '/plan',
     name: 'StudyPlan',
     component: () => import('@/views/StudyPlanView.vue'),
     meta: { requiresAuth: true, title: '备考计划' },
+  },
+  {
+    path: '/learn',
+    redirect: '/learn/points',
+  },
+  {
+    path: '/learn/points',
+    name: 'KnowledgeTree',
+    component: () => import('@/views/KnowledgeTree.vue'),
+    meta: { requiresAuth: true, title: '知识点全景树' },
+  },
+  {
+    path: '/learn/points/:id',
+    name: 'KnowledgeDetail',
+    component: () => import('@/views/KnowledgeDetail.vue'),
+    meta: { requiresAuth: true, title: '考点精析与例题' },
+  },
+  {
+    path: '/learn/glossary',
+    name: 'GlossaryList',
+    component: () => import('@/views/GlossaryList.vue'),
+    meta: { requiresAuth: true, title: '高频英语术语词表' },
+  },
+  {
+    path: '/learn/glossary/quiz',
+    name: 'GlossaryQuiz',
+    component: () => import('@/views/GlossaryQuiz.vue'),
+    meta: { requiresAuth: true, title: '英语术语速测' },
+  },
+  {
+    path: '/learn/glossary/:id',
+    name: 'GlossaryDetail',
+    component: () => import('@/views/GlossaryDetail.vue'),
+    meta: { requiresAuth: true, title: '英语词条详情' },
   },
   {
     path: '/admin',
@@ -68,6 +109,12 @@ const routes = [
     component: () => import('@/views/LoginRegister.vue'),
     meta: { title: '登录与注册' },
   },
+  {
+    path: '/download',
+    name: 'Download',
+    component: () => import('@/views/DownloadView.vue'),
+    meta: { title: '下载 Android 客户端' },
+  },
 ]
 
 const router = createRouter({
@@ -77,6 +124,10 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+  if (to.name === 'Download' && isNativeApp()) {
+    next({ name: authStore.isLoggedIn ? 'Home' : 'Login' })
+    return
+  }
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (to.meta.requiresAdmin && !authStore.isAdmin) {

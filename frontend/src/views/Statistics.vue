@@ -1,7 +1,6 @@
 <template>
-  <div class="p-4 space-y-4 pb-24">
-    <!-- Readiness Score Card -->
-    <div class="bg-gradient-to-br from-indigo-600 via-blue-600 to-sky-600 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+  <div class="rk-page">
+    <div class="rk-card p-5 bg-ink-800 text-paper-50 relative overflow-hidden">
       <div class="relative z-10 flex items-center justify-between">
         <div>
           <span class="text-[11px] font-medium tracking-wider uppercase opacity-85">第3版大纲 · 综合备考胜率指数</span>

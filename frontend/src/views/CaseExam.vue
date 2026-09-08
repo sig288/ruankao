@@ -1,7 +1,7 @@
 <template>
-  <div class="p-4 space-y-4">
+  <div class="rk-page">
     <!-- Header Selection -->
-    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+    <div class="rk-card p-3.5 flex items-center justify-between">
       <div class="flex-1 mr-2">
         <label class="block text-[10px] font-bold text-slate-400 uppercase">案例分析题目</label>
         <select

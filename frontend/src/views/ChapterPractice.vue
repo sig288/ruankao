@@ -1,11 +1,11 @@
 <template>
   <div
-    class="p-4 flex flex-col space-y-4 pb-24"
+    class="rk-page"
     @touchstart="handleTouchStart"
     @touchend="handleTouchEnd"
   >
     <!-- Chapter Selector Drawer / Header -->
-    <div class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+    <div class="rk-card p-3.5 flex items-center justify-between">
       <div class="flex-1 mr-2">
         <label class="block text-[10px] font-bold text-slate-400 uppercase">
           {{ isWeakMode ? '🔥 智能推题模式' : '当前章节' }}
@@ -54,7 +54,7 @@
       <!-- Progress Bar & Meta -->
       <div class="flex items-center justify-between text-xs text-slate-500">
         <span class="inline-flex items-center space-x-1 flex-wrap">
-          <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-md font-medium text-[11px]">{{ currentQuestion.chapter }}</span>
+          <span class="px-2 py-0.5 bg-pine-50 text-pine-700 rounded-md font-medium text-[11px]">{{ currentQuestion.chapter }}</span>
           <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md font-medium text-[11px]">{{ currentQuestion.knowledge }}</span>
         </span>
         <span class="font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap ml-2">
@@ -63,7 +63,7 @@
       </div>
 
       <!-- Question Card Container -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-700 shadow-sm space-y-4">
+      <div class="rk-card p-5 space-y-4">
         <!-- Stem -->
         <div class="text-sm font-semibold text-slate-800 dark:text-white leading-relaxed">
           {{ currentQuestion.stem }}
@@ -107,6 +107,29 @@
           <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ currentQuestion.analysis }}</p>
         </div>
 
+        <!-- Linked Knowledge Points & Glossary Terms Links (A-US5, B-US5) -->
+        <div v-if="(currentQuestion.knowledge_point_ids && currentQuestion.knowledge_point_ids.length > 0) || (currentQuestion.glossary_ids && currentQuestion.glossary_ids.length > 0)" class="pt-2 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] text-slate-400">关联大纲：</span>
+          <router-link
+            v-for="kpId in currentQuestion.knowledge_point_ids"
+            :key="kpId"
+            :to="`/learn/points/${kpId}`"
+            class="px-2 py-0.8 bg-blue-50 text-blue-700 rounded-lg text-[10px] font-semibold border border-blue-200 hover:bg-blue-100 transition-colors flex items-center space-x-1"
+          >
+            <span>🌲 考点讲义</span>
+            <span>›</span>
+          </router-link>
+          <router-link
+            v-for="gId in currentQuestion.glossary_ids"
+            :key="gId"
+            :to="`/learn/glossary/${gId}`"
+            class="px-2 py-0.8 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-semibold border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center space-x-1"
+          >
+            <span>🔤 术语词卡</span>
+            <span>›</span>
+          </router-link>
+        </div>
+
         <!-- P0 DeepSeek AI Companion Assist Panel -->
         <AiAssistPanel
           :question-id="currentQuestion.id"
@@ -129,7 +152,7 @@
         <button
           @click="nextQuestion"
           :disabled="currentIndex >= questions.length - 1"
-          class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40"
+          class="px-5 py-2.5 bg-ink-800 text-paper-50 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-40 min-h-[44px]"
         >
           下一题 →
         </button>

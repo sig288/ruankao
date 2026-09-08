@@ -1,7 +1,6 @@
 <template>
-  <div class="p-4 space-y-4 pb-24">
-    <!-- Header with Countdown Widget -->
-    <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+  <div class="rk-page">
+    <div class="rk-card p-5 bg-ink-800 text-paper-50 relative overflow-hidden">
       <div class="relative z-10 flex items-center justify-between">
         <div>
           <span class="text-[11px] font-medium tracking-wider uppercase opacity-80">全国软考中项备考倒计时</span>

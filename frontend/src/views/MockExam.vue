@@ -1,9 +1,9 @@
 <template>
-  <div class="p-4 space-y-4">
+  <div class="rk-page">
     <!-- State 1: Configuration / Start Screen -->
     <div v-if="examState === 'intro'" class="space-y-4">
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center">
-        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+      <div class="rk-card p-6 text-center">
+        <div class="w-14 h-14 bg-ink-100 text-ink-700 rounded-2xl flex items-center justify-center mx-auto mb-3">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
@@ -17,7 +17,7 @@
             <button
               @click="configCount = 75; configTime = 120"
               class="p-3.5 rounded-xl border text-left transition-all"
-              :class="configCount === 75 ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500' : 'border-slate-200 bg-white'"
+              :class="configCount === 75 ? 'border-pine-600 bg-pine-50 text-ink-800 ring-2 ring-pine-500' : 'border-paper-200 bg-paper-50'"
             >
               <div class="font-bold text-xs">标准全真卷</div>
               <div class="text-[11px] text-slate-500 mt-0.5">75 题 · 限时 120 分钟</div>
@@ -26,7 +26,7 @@
             <button
               @click="configCount = 15; configTime = 25"
               class="p-3.5 rounded-xl border text-left transition-all"
-              :class="configCount === 15 ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500' : 'border-slate-200 bg-white'"
+              :class="configCount === 15 ? 'border-pine-600 bg-pine-50 text-ink-800 ring-2 ring-pine-500' : 'border-paper-200 bg-paper-50'"
             >
               <div class="font-bold text-xs">通勤极速体验卷</div>
               <div class="text-[11px] text-slate-500 mt-0.5">15 题 · 限时 25 分钟</div>

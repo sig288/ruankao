@@ -1,13 +1,23 @@
 <template>
-  <div class="p-4 space-y-4">
+  <div class="rk-page">
     <!-- Header with Filter -->
-    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+    <div class="rk-card p-3.5 flex items-center justify-between">
       <div>
         <h2 class="text-sm font-black text-slate-800">错题本与弱点消灭</h2>
         <p class="text-[10px] text-slate-400">自动沉淀日常练习与模考失误题</p>
       </div>
 
       <div class="flex items-center space-x-1.5">
+        <select
+          v-if="availableKnowledges.length > 0"
+          v-model="selectedKnowledge"
+          @change="loadWrongQuestions()"
+          class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-700 max-w-[120px] truncate"
+        >
+          <option value="">全部考点</option>
+          <option v-for="k in availableKnowledges" :key="k" :value="k">{{ k }}</option>
+        </select>
+
         <button
           @click="filterMastered = filterMastered === false ? null : false; loadWrongQuestions()"
           class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
@@ -70,6 +80,24 @@
           </div>
 
           <div class="flex items-center space-x-2">
+            <!-- Go Consolidate Button (A-US6) -->
+            <router-link
+              v-if="item.knowledge_point_ids && item.knowledge_point_ids.length > 0"
+              :to="`/learn/points/${item.knowledge_point_ids[0]}`"
+              class="text-xs px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 flex items-center space-x-0.5 transition-colors"
+            >
+              <span>去巩固</span>
+              <span>›</span>
+            </router-link>
+            <router-link
+              v-else
+              :to="`/practice?knowledge=${encodeURIComponent(item.knowledge)}`"
+              class="text-xs px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 flex items-center space-x-0.5 transition-colors"
+            >
+              <span>去巩固</span>
+              <span>›</span>
+            </router-link>
+
             <button
               @click="toggleMaster(item)"
               class="text-xs px-2 py-1 rounded-lg font-medium transition-colors"
@@ -145,6 +173,8 @@ import { haptics } from '@/utils/haptics'
 const items = ref<any[]>([])
 const loading = ref(false)
 const filterMastered = ref<boolean | null>(false)
+const selectedKnowledge = ref<string>('')
+const availableKnowledges = ref<string[]>([])
 
 async function loadWrongQuestions() {
   loading.value = true
@@ -153,8 +183,14 @@ async function loadWrongQuestions() {
     if (filterMastered.value !== null) {
       params.is_mastered = filterMastered.value
     }
+    if (selectedKnowledge.value) {
+      params.knowledge = selectedKnowledge.value
+    }
     const res: any = await wrongBookApi.listWrong(params)
     items.value = res.items || []
+    if (res.available_knowledges) {
+      availableKnowledges.value = res.available_knowledges
+    }
   } catch (err) {
     console.error('Failed to load wrong questions', err)
   } finally {

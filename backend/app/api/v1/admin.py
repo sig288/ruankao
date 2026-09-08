@@ -12,8 +12,10 @@ from app.models.user import User
 from app.models.question import Question
 from app.models.wrong_question import WrongQuestion
 from app.models.agent_key import AgentApiKey
+from app.models.learn import KnowledgePoint, GlossaryTerm
 from app.schemas.question import QuestionCreate, QuestionOut
 from app.schemas.agent import AgentApiKeyCreate, AgentApiKeyOut
+from app.schemas.learn import PointImportItem, GlossaryImportItem
 from app.api.deps import get_current_admin
 
 router = APIRouter()
@@ -163,3 +165,109 @@ def delete_agent_key(
     db.delete(ak)
     db.commit()
     return {"message": "Agent Key 已删除"}
+
+@router.post("/learn/points/import")
+def import_knowledge_points(
+    points: List[PointImportItem],
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    管理员批量导入/更新知识点（支持 upsert 幂等操作）
+    """
+    inserted = 0
+    updated = 0
+    errors = []
+
+    for item in points:
+        try:
+            kp = db.query(KnowledgePoint).filter(KnowledgePoint.id == item.id).first()
+            if kp:
+                kp.chapter_id = item.chapter_id
+                kp.title = item.title
+                kp.frequency = item.frequency
+                kp.est_minutes = item.est_minutes
+                kp.summary_md = item.summary_md
+                kp.formula_md = item.formula_md
+                kp.domain_tags = item.domain_tags
+                kp.glossary_ids = item.glossary_ids
+                kp.question_ids = item.question_ids
+                kp.sort_order = item.sort_order
+                updated += 1
+            else:
+                kp = KnowledgePoint(
+                    id=item.id,
+                    chapter_id=item.chapter_id,
+                    title=item.title,
+                    frequency=item.frequency,
+                    est_minutes=item.est_minutes,
+                    summary_md=item.summary_md,
+                    formula_md=item.formula_md,
+                    domain_tags=item.domain_tags,
+                    glossary_ids=item.glossary_ids,
+                    question_ids=item.question_ids,
+                    sort_order=item.sort_order
+                )
+                db.add(kp)
+                inserted += 1
+        except Exception as e:
+            errors.append({"id": item.id, "error": str(e)})
+
+    db.commit()
+    return {
+        "message": f"成功处理 {inserted + updated} 个知识点",
+        "inserted": inserted,
+        "updated": updated,
+        "errors": errors
+    }
+
+@router.post("/learn/glossary/import")
+def import_glossary_terms(
+    terms: List[GlossaryImportItem],
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    管理员批量导入/更新英语术语词表（支持 upsert 幂等操作）
+    """
+    inserted = 0
+    updated = 0
+    errors = []
+
+    for item in terms:
+        try:
+            term_id = item.id or f"term_{item.term_en.lower().replace(' ', '_').replace('-', '_')[:30]}"
+            t = db.query(GlossaryTerm).filter(GlossaryTerm.id == term_id).first()
+            if t:
+                t.term_en = item.term_en
+                t.term_zh = item.term_zh
+                t.tags = item.tags
+                t.tip = item.tip
+                t.frequency = item.frequency
+                t.confuse_with = item.confuse_with
+                t.knowledge_point_ids = item.knowledge_point_ids
+                updated += 1
+            else:
+                t = GlossaryTerm(
+                    id=term_id,
+                    term_en=item.term_en,
+                    term_zh=item.term_zh,
+                    tags=item.tags,
+                    tip=item.tip,
+                    frequency=item.frequency,
+                    confuse_with=item.confuse_with,
+                    knowledge_point_ids=item.knowledge_point_ids
+                )
+                db.add(t)
+                inserted += 1
+        except Exception as e:
+            errors.append({"term_en": item.term_en, "error": str(e)})
+
+    db.commit()
+    return {
+        "message": f"成功处理 {inserted + updated} 个词条",
+        "inserted": inserted,
+        "updated": updated,
+        "errors": errors
+    }
+
