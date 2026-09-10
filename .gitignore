@@ -45,3 +45,4 @@ android/build/
 android/app/build/
 *.apk
 *.aab
+*.tar.gz
