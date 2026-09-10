@@ -135,23 +135,37 @@ def get_daily_quota(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Check remaining AI quota for today"""
+    """Check remaining AI quota for today / custom quota"""
     now = datetime.now(timezone.utc)
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
 
-    used_today = (
-        db.query(func.count(AiJob.id))
-        .filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start)
-        .scalar()
-    ) or 0
-
-    remaining = max(0, settings.AI_DAILY_QUOTA - used_today)
-    return {
-        "daily_limit": settings.AI_DAILY_QUOTA,
-        "used_today": used_today,
-        "remaining": remaining,
-        "has_api_key": bool(settings.DEEPSEEK_API_KEY)
-    }
+    if current_user.ai_quota is not None:
+        used_total = (
+            db.query(func.count(AiJob.id))
+            .filter(AiJob.user_id == current_user.id)
+            .scalar()
+        ) or 0
+        limit = current_user.ai_quota
+        remaining = max(0, limit - used_total)
+        return {
+            "daily_limit": limit,
+            "used_today": used_total,
+            "remaining": remaining,
+            "has_api_key": bool(settings.DEEPSEEK_API_KEY)
+        }
+    else:
+        used_today = (
+            db.query(func.count(AiJob.id))
+            .filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start)
+            .scalar()
+        ) or 0
+        remaining = max(0, settings.AI_DAILY_QUOTA - used_today)
+        return {
+            "daily_limit": settings.AI_DAILY_QUOTA,
+            "used_today": used_today,
+            "remaining": remaining,
+            "has_api_key": bool(settings.DEEPSEEK_API_KEY)
+        }
 
 @router.post("/jobs", response_model=AiJobOut)
 def create_ai_job(
@@ -169,18 +183,31 @@ def create_ai_job(
     now = datetime.now(timezone.utc)
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
 
-    # 1. Check daily quota (default 30/day)
-    used_today = (
-        db.query(func.count(AiJob.id))
-        .filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start)
-        .scalar()
-    ) or 0
-
-    if used_today >= settings.AI_DAILY_QUOTA:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"今日 AI 伴学配额已用完（每日上限 {settings.AI_DAILY_QUOTA} 次），明日 00:00 自动刷新！"
-        )
+    # 1. Check quota
+    if current_user.ai_quota is not None:
+        used = (
+            db.query(func.count(AiJob.id))
+            .filter(AiJob.user_id == current_user.id)
+            .scalar()
+        ) or 0
+        if used >= current_user.ai_quota:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"您的专属 AI 伴学配额（共 {current_user.ai_quota} 次）已用完！"
+            )
+        calc_remaining = max(0, current_user.ai_quota - (used + 1))
+    else:
+        used_today = (
+            db.query(func.count(AiJob.id))
+            .filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start)
+            .scalar()
+        ) or 0
+        if used_today >= settings.AI_DAILY_QUOTA:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"今日 AI 伴学配额已用完（每日上限 {settings.AI_DAILY_QUOTA} 次），明日 00:00 自动刷新！"
+            )
+        calc_remaining = max(0, settings.AI_DAILY_QUOTA - (used_today + 1))
 
     # 2. Fetch context question if question_id provided
     question = None
@@ -253,7 +280,7 @@ def create_ai_job(
     db.commit()
     db.refresh(job)
 
-    remaining_quota = max(0, settings.AI_DAILY_QUOTA - (used_today + 1))
+    remaining_quota = calc_remaining
 
     return AiJobOut(
         id=job.id,
@@ -276,6 +303,15 @@ def get_ai_job(
     if not job:
         raise HTTPException(status_code=404, detail="AI任务不存在")
 
+    if current_user.ai_quota is not None:
+        used_total = db.query(func.count(AiJob.id)).filter(AiJob.user_id == current_user.id).scalar() or 0
+        rem = max(0, current_user.ai_quota - used_total)
+    else:
+        now = datetime.now(timezone.utc)
+        today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+        used_today = db.query(func.count(AiJob.id)).filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start).scalar() or 0
+        rem = max(0, settings.AI_DAILY_QUOTA - used_today)
+
     return AiJobOut(
         id=job.id,
         action_type=job.action_type,
@@ -283,5 +319,5 @@ def get_ai_job(
         response=job.response,
         parsed_data=job.parsed_data,
         created_at=job.created_at,
-        remaining_quota=settings.AI_DAILY_QUOTA
+        remaining_quota=rem
     )

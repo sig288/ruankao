@@ -1,4 +1,4 @@
-﻿# 软考中项智能刷题助手 (v3.0 MVP) 项目交接文档
+# 软考中项智能刷题助手 (v3.0 MVP) 项目交接文档
 
 ## 📌 一、项目概况与线上地址
 
@@ -15,6 +15,7 @@
     - `ruankao-backend`：FastAPI + SQLAlchemy + SQLite (宿主端口 8000，反向代理至 443 `/api/`)
 - **内置测试账号**：
   - 学员账号：`student_2026` / `Password123!`
+  - 专属高配额账号：`wwr` / `mko0nji9`（专属 AI 伴学配额 50,000 次）
   - 管理员账号：`admin` / `Admin123!`
   - 外部 Agent 测试密钥：`rk-live-agent-key-2026`
 

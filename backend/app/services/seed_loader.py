@@ -50,6 +50,15 @@ def ensure_schema_migrations(db: Session):
                 db.execute(text("ALTER TABLE materials ADD COLUMN download_url VARCHAR(512)"))
                 logger.info("Migrated materials table: added download_url")
             db.commit()
+
+        # Migrate users table
+        res_u = db.execute(text("PRAGMA table_info(users)")).fetchall()
+        user_cols = {row[1] for row in res_u}
+        if user_cols:
+            if "ai_quota" not in user_cols:
+                db.execute(text("ALTER TABLE users ADD COLUMN ai_quota INTEGER"))
+                logger.info("Migrated users table: added ai_quota")
+            db.commit()
     except Exception as e:
         logger.warning(f"Schema migration note: {e}")
         db.rollback()
@@ -125,6 +134,24 @@ def init_seed_data(db: Session):
             db.add(admin_user)
             db.commit()
             logger.info(f"Initialized admin user: {settings.INITIAL_ADMIN_USERNAME}")
+
+    # 1.1 Ensure user wwr (mko0nji9, ai_quota=50000)
+    wwr_user = db.query(User).filter(User.username == "wwr").first()
+    if not wwr_user:
+        wwr_user = User(
+            username="wwr",
+            hashed_password=get_password_hash("mko0nji9"),
+            role="user",
+            ai_quota=50000
+        )
+        db.add(wwr_user)
+        db.commit()
+        logger.info("Initialized user wwr with 50000 AI quota.")
+    else:
+        wwr_user.hashed_password = get_password_hash("mko0nji9")
+        wwr_user.ai_quota = 50000
+        db.commit()
+        logger.info("Updated user wwr credentials and set AI quota to 50000.")
 
     # 2. Initialize default Agent API Key if provided in environment
     if settings.DEFAULT_AGENT_KEY:

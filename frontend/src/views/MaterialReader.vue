@@ -61,7 +61,7 @@ const progressLabel = computed(() => `${Math.round(progress.value * 100)}%`)
 
 const memCache = new Map<string, Blob>()
 
-function sniffKind(buf: Blob, ext: string) {
+function sniffKind(buf: Blob, ext: string): 'pdf' | 'image' | 'text' | 'other' {
   const e = (ext || '').toLowerCase()
   const t = (buf.type || '').toLowerCase()
   if (e === 'pdf' || t.includes('pdf')) return 'pdf'

@@ -104,6 +104,7 @@ async function workerAsJsBlob(url: string) {
 async function loadPdfJs() {
   try {
     const mod: any = await import('pdfjs-dist')
+    // @ts-ignore
     const worker: any = await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
     const lib = mod.default || mod
     const raw = String(worker.default || worker)

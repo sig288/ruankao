@@ -14,6 +14,7 @@ class UserOut(BaseModel):
     id: str
     username: str
     role: str
+    ai_quota: Optional[int] = None
     created_at: Optional[datetime] = None
 
     class Config:
