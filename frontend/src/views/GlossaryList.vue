@@ -101,12 +101,13 @@
       <div
         v-for="term in items"
         :key="term.id"
-        class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5 relative transition-all"
+        @click="$router.push(`/learn/glossary/${term.id}`)"
+        class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5 relative transition-all cursor-pointer hover:border-indigo-300 hover:shadow-md active:scale-[0.99] group"
         :class="{ 'border-amber-300 bg-amber-50/20': term.favorited }"
       >
         <!-- Header: EN + Favorite + Frequency -->
         <div class="flex items-start justify-between">
-          <div class="flex-1 pr-2 cursor-pointer" @click="$router.push(`/learn/glossary/${term.id}`)">
+          <div class="flex-1 pr-2">
             <div class="flex items-center space-x-2 mb-0.5">
               <span class="text-xs font-black font-mono text-indigo-700 tracking-wide">
                 {{ term.term_en }}
@@ -123,24 +124,26 @@
             </div>
           </div>
 
-          <!-- Favorite Button -->
-          <button
-            @click="toggleFavorite(term)"
-            class="p-1.5 text-slate-300 hover:text-amber-500 transition-colors"
-            :class="{ 'text-amber-500': term.favorited }"
-            title="收藏"
-          >
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </button>
+          <div class="flex items-center space-x-1">
+            <!-- Favorite Button -->
+            <button
+              @click.stop="toggleFavorite(term)"
+              class="p-1.5 text-slate-300 hover:text-amber-500 transition-colors"
+              :class="{ 'text-amber-500': term.favorited }"
+              title="收藏"
+            >
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </button>
+            <span class="text-xs text-slate-300 group-hover:text-indigo-600 font-bold transition-colors">›</span>
+          </div>
         </div>
 
         <!-- Tip Box -->
         <div
           v-if="term.tip"
-          @click="$router.push(`/learn/glossary/${term.id}`)"
-          class="p-2.5 bg-slate-50 rounded-xl text-[11px] text-slate-600 leading-relaxed cursor-pointer"
+          class="p-2.5 bg-slate-50 rounded-xl text-[11px] text-slate-600 leading-relaxed"
         >
           <span class="font-bold text-slate-700">考点提示：</span>{{ term.tip }}
         </div>
@@ -160,14 +163,14 @@
           <!-- Know / Don't Know Quick Toggle (B-US3) -->
           <div class="flex items-center space-x-1.5">
             <button
-              @click="setKnownStatus(term, 'dont_know')"
+              @click.stop="setKnownStatus(term, 'dont_know')"
               class="px-2 py-0.8 rounded-lg text-[10px] font-semibold transition-colors"
               :class="term.known === 'dont_know' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
             >
               不会
             </button>
             <button
-              @click="setKnownStatus(term, 'know')"
+              @click.stop="setKnownStatus(term, 'know')"
               class="px-2 py-0.8 rounded-lg text-[10px] font-semibold transition-colors"
               :class="term.known === 'know' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
             >
@@ -256,8 +259,8 @@ async function toggleFavorite(term: any) {
   triggerHaptic('tap')
   const newFav = !term.favorited
   try {
-    await learnApi.updateGlossaryStatus(term.id, { favorited: newFav })
-    term.favorited = newFav
+    const res = await learnApi.updateGlossaryStatus(term.id, { favorited: newFav })
+    term.favorited = res.favorited !== undefined ? res.favorited : newFav
   } catch (err) {
     console.error(err)
   }
@@ -267,8 +270,8 @@ async function setKnownStatus(term: any, target: string) {
   triggerHaptic('tap')
   const newKnown = term.known === target ? 'unknown' : target
   try {
-    await learnApi.updateGlossaryStatus(term.id, { known: newKnown })
-    term.known = newKnown
+    const res = await learnApi.updateGlossaryStatus(term.id, { known: newKnown })
+    term.known = res.known ?? newKnown
     if (newKnown === 'know') {
       triggerHaptic('success')
     }

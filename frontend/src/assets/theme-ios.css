@@ -1,0 +1,341 @@
+/* ==========================================================================
+   iOS Human Interface Design System for 软考中项刷题助手 (Proposal D1)
+   ========================================================================== */
+
+:root {
+  --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+  --ios-bg: #f2f2f7;
+  --ios-card-bg: #ffffff;
+  --ios-subcard-bg: #f7f7f9;
+  --ios-blue: #007aff;
+  --ios-blue-light: #e5f1ff;
+  --ios-blue-pressed: #0062cc;
+  --ios-green: #34c759;
+  --ios-green-light: #e8f8ed;
+  --ios-orange: #ff9500;
+  --ios-orange-light: #fff5e5;
+  --ios-red: #ff3b30;
+  --ios-red-light: #ffebe9;
+  --ios-indigo: #5856d6;
+  --ios-purple: #af52de;
+  --ios-teal: #30b0c7;
+
+  --ios-text-primary: #1c1c1e;
+  --ios-text-secondary: #8e8e93;
+  --ios-text-tertiary: #aeaeb2;
+  --ios-separator: rgba(60, 60, 67, 0.14);
+  --ios-separator-thick: rgba(60, 60, 67, 0.08);
+
+  --ios-radius-sm: 8px;
+  --ios-radius-md: 12px;
+  --ios-radius-lg: 16px;
+  --ios-radius-xl: 20px;
+
+  --sat: max(env(safe-area-inset-top, 0px), 24px);
+  --sab: max(env(safe-area-inset-bottom, 0px), 16px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --tabbar-h: 56px;
+}
+
+html.is-native {
+  --sat: max(env(safe-area-inset-top, 0px), 38px);
+  --sab: max(env(safe-area-inset-bottom, 0px), 20px);
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ios-bg: #000000;
+    --ios-card-bg: #1c1c1e;
+    --ios-subcard-bg: #2c2c2e;
+    --ios-text-primary: #ffffff;
+    --ios-text-secondary: #8e8e93;
+    --ios-text-tertiary: #636366;
+    --ios-separator: rgba(84, 84, 88, 0.35);
+    --ios-separator-thick: rgba(84, 84, 88, 0.2);
+    --ios-blue-light: rgba(0, 122, 255, 0.18);
+    --ios-green-light: rgba(52, 199, 89, 0.18);
+    --ios-orange-light: rgba(255, 149, 0, 0.18);
+    --ios-red-light: rgba(255, 59, 48, 0.18);
+  }
+}
+
+/* Base Body Styles */
+body {
+  font-family: var(--ios-font);
+  background-color: var(--ios-bg);
+  color: var(--ios-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Page Containers */
+.ios-page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background-color: var(--ios-bg);
+  padding: 14px 16px 32px 16px;
+  box-sizing: border-box;
+}
+
+/* Header Navbar */
+.ios-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding-top: var(--sat);
+  padding-bottom: 8px;
+  padding-left: calc(16px + var(--sal));
+  padding-right: calc(16px + var(--sar));
+  background: rgba(242, 242, 247, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--ios-separator);
+  transition: all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ios-header {
+    background: rgba(28, 28, 30, 0.85);
+  }
+}
+
+/* Inset Grouped Section */
+.ios-group {
+  margin-bottom: 18px;
+}
+
+.ios-group-header {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ios-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-bottom: 6px;
+}
+
+.ios-group-footer {
+  font-size: 12px;
+  color: var(--ios-text-secondary);
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* Inset Grouped List & Card */
+.ios-card {
+  background-color: var(--ios-card-bg);
+  border-radius: var(--ios-radius-lg);
+  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.04);
+  border: 0.5px solid var(--ios-separator-thick);
+  overflow: hidden;
+}
+
+.ios-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 12px 16px;
+  background-color: var(--ios-card-bg);
+  border-bottom: 0.5px solid var(--ios-separator);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ios-row:last-child {
+  border-bottom: none;
+}
+
+.ios-row:active {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ios-row:active {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Buttons */
+.ios-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  background-color: var(--ios-blue);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--ios-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.25);
+}
+
+.ios-btn-primary:active {
+  opacity: 0.85;
+  transform: scale(0.99);
+}
+
+.ios-btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.ios-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  background-color: var(--ios-blue-light);
+  color: var(--ios-blue);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--ios-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  text-decoration: none;
+}
+
+.ios-btn-secondary:active {
+  opacity: 0.75;
+}
+
+/* Segmented Control */
+.ios-segmented {
+  display: flex;
+  background-color: rgba(118, 118, 128, 0.12);
+  border-radius: 9px;
+  padding: 2px;
+  user-select: none;
+}
+
+.ios-segmented-item {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: 7px;
+  color: var(--ios-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  background: transparent;
+}
+
+.ios-segmented-item.is-active {
+  background-color: var(--ios-card-bg);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Badges & Pills */
+.ios-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+}
+
+.ios-pill-blue {
+  background-color: var(--ios-blue-light);
+  color: var(--ios-blue);
+}
+
+.ios-pill-green {
+  background-color: var(--ios-green-light);
+  color: var(--ios-green);
+}
+
+.ios-pill-orange {
+  background-color: var(--ios-orange-light);
+  color: var(--ios-orange);
+}
+
+.ios-pill-red {
+  background-color: var(--ios-red-light);
+  color: var(--ios-red);
+}
+
+.ios-pill-gray {
+  background-color: rgba(142, 142, 147, 0.15);
+  color: var(--ios-text-secondary);
+}
+
+/* TabBar */
+.ios-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: calc(var(--tabbar-h) + var(--sab));
+  padding-bottom: var(--sab);
+  background: rgba(249, 249, 249, 0.94);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-top: 0.5px solid var(--ios-separator);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ios-tabbar {
+    background: rgba(28, 28, 30, 0.92);
+  }
+}
+
+.ios-tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--ios-text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  user-select: none;
+}
+
+.ios-tab-item svg {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 2px;
+  transition: transform 0.15s ease;
+}
+
+.ios-tab-item.is-active {
+  color: var(--ios-blue);
+  font-weight: 600;
+}
+
+.ios-tab-item:active svg {
+  transform: scale(0.92);
+}

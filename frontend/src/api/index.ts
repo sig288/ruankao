@@ -95,6 +95,27 @@ export const adminApi = {
   createAgentKey: (name: string) => api.post('/admin/agent-keys', { name }),
   toggleAgentKey: (id: string) => api.post(`/admin/agent-keys/${id}/toggle`),
   deleteAgentKey: (id: string) => api.delete(`/admin/agent-keys/${id}`),
+
+  // User Management (Proposal D2)
+  listUsers: (params?: { search?: string; is_active?: boolean; ai_enabled?: boolean; skip?: number; limit?: number }) =>
+    api.get<any, any[]>('/admin/users', { params }),
+  createUser: (data: { username: string; password?: string; role?: string; note?: string; ai_enabled?: boolean; ai_daily_quota?: number }) =>
+    api.post('/admin/users', data),
+  updateUser: (id: string, data: { is_active?: boolean; role?: string; note?: string }) =>
+    api.patch(`/admin/users/${id}`, data),
+  resetPassword: (id: string, new_password: string) =>
+    api.post(`/admin/users/${id}/reset-password`, { new_password }),
+  updateUserAi: (id: string, data: { ai_enabled: boolean; ai_daily_quota?: number | null }) =>
+    api.patch(`/admin/users/${id}/ai`, data),
+  getUserAiUsage: (id: string) =>
+    api.get(`/admin/users/${id}/ai-usage`),
+
+  // AI Global Configuration & Stats (Proposal D3)
+  getAiSettings: () => api.get('/admin/ai/settings'),
+  updateAiSettings: (data: { api_key?: string; base_url?: string; model?: string; default_daily_quota?: number; global_enabled?: boolean }) =>
+    api.put('/admin/ai/settings', data),
+  testAiConnectivity: () => api.post('/admin/ai/test'),
+  getAiUsageStats: () => api.get('/admin/ai/usage'),
 }
 
 export const masteryApi = {

@@ -1,6 +1,6 @@
-export const APP_VERSION = '3.2.1'
-export const APP_VERSION_CODE = 321
-export const H5_BUILD = '20260908b'
+export const APP_VERSION = '3.3.0'
+export const APP_VERSION_CODE = 330
+export const H5_BUILD = '20260908d'
 export const LIVE_H5_URL = 'https://122.51.95.218/ruankao/'
 export const LIVE_API_BASE = 'https://122.51.95.218/api/v1'
 export const APPLIED_H5_CODE_KEY = 'rk_applied_h5_code'

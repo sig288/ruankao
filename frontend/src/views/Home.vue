@@ -1,149 +1,200 @@
 <template>
-  <div class="rk-page">
-    <section class="rk-card overflow-hidden relative bg-ink-800 text-paper-50 p-4">
-      <p class="text-[10px] tracking-widest text-paper-300 uppercase">{{ greeting }} · {{ authStore.username }}</p>
-      <div class="mt-2 flex items-end justify-between gap-3">
+  <div class="ios-page space-y-4">
+    <!-- Today Large Title & Top Meta -->
+    <div class="pt-2 px-1 flex items-baseline justify-between">
+      <div>
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{{ todayDateStr }}</p>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">今天</h1>
+      </div>
+
+      <!-- AI Status Capsule (D4) -->
+      <div
+        class="ios-pill text-[11px] cursor-pointer active:scale-95 transition"
+        :class="aiStatusClass"
+        @click="showAiTip"
+      >
+        <span class="w-1.5 h-1.5 rounded-full" :class="aiDotClass"></span>
+        <span>{{ aiStatusText }}</span>
+      </div>
+    </div>
+
+    <!-- Summary KPI Card -->
+    <div class="ios-card p-4">
+      <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-black leading-tight">灯下备考，拿下中项</h2>
-          <p class="text-[11px] text-paper-300 mt-1">选择 75 分 · 案例计算与问答</p>
+          <span class="text-xs font-medium text-slate-400">备考进度</span>
+          <p class="text-base font-bold text-slate-800 mt-0.5">{{ greeting }}，{{ authStore.username }}</p>
         </div>
-        <div class="text-right shrink-0">
-          <div class="text-[10px] text-paper-300">距考试</div>
-          <div class="text-2xl font-black font-mono text-cinnabar-100 leading-none">
-            {{ plan?.days_remaining ?? '--' }}
-            <span class="text-[10px] font-semibold text-paper-300">天</span>
+        <div v-if="plan?.days_remaining !== undefined" class="text-right">
+          <span class="text-[10px] font-medium text-slate-400">距离考试</span>
+          <div class="text-xl font-black font-mono text-[#007AFF] leading-none mt-0.5">
+            {{ plan.days_remaining }} <span class="text-xs font-semibold text-slate-400">天</span>
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/10 text-center">
+      <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
         <div>
-          <div class="text-base font-black">{{ stats.total_answered }}</div>
-          <div class="text-[10px] text-paper-300">已刷题</div>
+          <div class="text-lg font-bold font-mono text-slate-800">{{ stats.total_answered }}</div>
+          <div class="text-[11px] text-slate-400 font-medium">已刷题</div>
         </div>
         <div>
-          <div class="text-base font-black">{{ stats.overall_accuracy }}%</div>
-          <div class="text-[10px] text-paper-300">正确率</div>
+          <div class="text-lg font-bold font-mono text-[#34C759]">{{ stats.overall_accuracy }}%</div>
+          <div class="text-[11px] text-slate-400 font-medium">正确率</div>
         </div>
         <div>
-          <div class="text-base font-black text-cinnabar-100">{{ stats.unmastered_wrong }}</div>
-          <div class="text-[10px] text-paper-300">待消灭</div>
+          <div class="text-lg font-bold font-mono text-[#FF3B30]">{{ stats.unmastered_wrong }}</div>
+          <div class="text-[11px] text-slate-400 font-medium">待消灭错题</div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section v-if="plan" class="rk-card p-3.5">
+    <!-- Daily Study Plan Punch-in -->
+    <div v-if="plan" class="ios-card p-3.5">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-bold text-ink-800">今日打卡 {{ completedTodayCount }}/{{ plan.today_tasks?.length || 0 }}</p>
-          <p class="text-[10px] text-muted mt-0.5">目标 {{ plan.exam_date }}</p>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-blue-50 text-[#007AFF] flex items-center justify-center text-xs font-bold">✓</div>
+          <span class="text-[13px] font-bold text-slate-800">今日打卡 ({{ completedTodayCount }}/{{ plan.today_tasks?.length || 0 }})</span>
         </div>
-        <router-link to="/plan" class="text-[11px] font-bold text-pine-600">计划 ›</router-link>
+        <router-link to="/plan" class="text-xs font-medium text-[#007AFF] hover:underline">查看计划 ›</router-link>
       </div>
-      <div v-if="plan.today_tasks?.length" class="mt-2 space-y-1.5">
+
+      <div v-if="plan.today_tasks?.length" class="mt-2.5 space-y-1.5">
         <div
           v-for="task in plan.today_tasks.slice(0, 2)"
           :key="task.id"
-          class="flex items-center justify-between text-[11px] px-2 py-1.5 rounded-lg bg-paper-100"
+          class="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-100/80"
         >
-          <span class="truncate" :class="{ 'line-through text-muted': task.is_completed }">
-            {{ task.is_completed ? '✓' : '○' }} {{ task.title }}
+          <span class="truncate" :class="{ 'line-through text-slate-400': task.is_completed }">
+            {{ task.is_completed ? '●' : '○' }} {{ task.title }}
           </span>
-          <span class="font-mono text-[10px] text-muted shrink-0">{{ task.estimated_minutes }}′</span>
+          <span class="font-mono text-[11px] text-slate-400 shrink-0 ml-2">{{ task.estimated_minutes }}分钟</span>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section class="grid grid-cols-2 gap-2.5">
-      <router-link to="/learn/points" class="rk-card p-3.5 active:scale-[0.98] transition">
-        <div class="w-9 h-9 rounded-xl bg-pine-100 text-pine-700 flex items-center justify-center text-sm font-black">学</div>
-        <h3 class="text-[13px] font-black text-ink-800 mt-2.5">考点知识树</h3>
-        <p class="text-[10px] text-muted mt-0.5">17章精析 · 口诀速记</p>
-      </router-link>
+    <!-- Group 1: Core Exam Modules (Inset Grouped) -->
+    <div class="ios-group">
+      <div class="ios-group-header">核心备考</div>
+      <div class="ios-card">
+        <router-link to="/learn/points" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#007AFF] flex items-center justify-center font-bold text-sm">学</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">考点知识树</div>
+              <div class="text-[11px] text-slate-400">83 个考点精析 · 关联例题专练</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
 
-      <router-link to="/practice" class="rk-card p-3.5 active:scale-[0.98] transition">
-        <div class="w-9 h-9 rounded-xl bg-cinnabar-50 text-cinnabar-700 flex items-center justify-center text-sm font-black">练</div>
-        <h3 class="text-[13px] font-black text-ink-800 mt-2.5">章节专项练</h3>
-        <p class="text-[10px] text-muted mt-0.5">按领域拆开刷</p>
-      </router-link>
+        <router-link to="/practice" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-[#5856D6] flex items-center justify-center font-bold text-sm">练</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">章节专项刷题</div>
+              <div class="text-[11px] text-slate-400">按领域拆分 · 专注做题模式</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
 
-      <router-link to="/mock-exam" class="rk-card p-3.5 active:scale-[0.98] transition">
-        <div class="w-9 h-9 rounded-xl bg-ink-100 text-ink-700 flex items-center justify-center text-sm font-black">考</div>
-        <h3 class="text-[13px] font-black text-ink-800 mt-2.5">全真机考</h3>
-        <p class="text-[10px] text-muted mt-0.5">75题 · 120分钟</p>
-      </router-link>
+        <router-link to="/mock-exam" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-[#34C759] flex items-center justify-center font-bold text-sm">考</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">全真机考模拟</div>
+              <div class="text-[11px] text-slate-400">75 题 · 120 分钟标准全真考场</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
 
-      <router-link to="/case-exam" class="rk-card p-3.5 active:scale-[0.98] transition">
-        <div class="w-9 h-9 rounded-xl bg-paper-200 text-ink-700 flex items-center justify-center text-sm font-black">例</div>
-        <h3 class="text-[13px] font-black text-ink-800 mt-2.5">案例分析</h3>
-        <p class="text-[10px] text-muted mt-0.5">计算与关键词采分</p>
-      </router-link>
-    </section>
-
-    <router-link
-      to="/practice?mode=weak"
-      class="rk-card p-3.5 flex items-center justify-between bg-cinnabar-50 border-cinnabar-100"
-    >
-      <div>
-        <p class="text-[13px] font-black text-cinnabar-700">薄弱点突击</p>
-        <p class="text-[10px] text-cinnabar-600 mt-0.5">错题 + 弱章动态组卷</p>
-      </div>
-      <span class="text-[11px] font-bold text-cinnabar-700">开练 ›</span>
-    </router-link>
-
-    <router-link
-      v-if="!inApp"
-      to="/download"
-      class="rk-card p-3.5 flex items-center justify-between"
-    >
-      <div>
-        <p class="text-[13px] font-black text-ink-800">下载 Android 客户端</p>
-        <p class="text-[10px] text-muted mt-0.5">官方 APK · 安装到手机主屏</p>
-      </div>
-      <span class="text-[11px] font-bold text-pine-600">下载 ›</span>
-    </router-link>
-
-    <section class="grid grid-cols-4 gap-2">
-      <router-link to="/learn/glossary" class="rk-card p-2.5 text-center">
-        <div class="text-sm">词</div>
-        <div class="text-[10px] font-bold text-ink-800 mt-1">英语词表</div>
-      </router-link>
-      <router-link to="/statistics" class="rk-card p-2.5 text-center">
-        <div class="text-sm">图</div>
-        <div class="text-[10px] font-bold text-ink-800 mt-1">掌握度</div>
-      </router-link>
-      <router-link to="/materials" class="rk-card p-2.5 text-center">
-        <div class="text-sm">档</div>
-        <div class="text-[10px] font-bold text-ink-800 mt-1">备考文库</div>
-      </router-link>
-      <router-link to="/favorites" class="rk-card p-2.5 text-center">
-        <div class="text-sm">藏</div>
-        <div class="text-[10px] font-bold text-ink-800 mt-1">收藏</div>
-      </router-link>
-    </section>
-
-    <section class="rk-card p-3.5">
-      <div class="flex items-center justify-between mb-2.5">
-        <h3 class="text-[11px] font-black text-ink-800">高频必背热区</h3>
-        <router-link to="/learn/points" class="text-[10px] font-bold text-pine-600">知识树 ›</router-link>
-      </div>
-      <div class="flex flex-wrap gap-1.5">
-        <router-link
-          v-for="item in highFreqTopics"
-          :key="item.name"
-          :to="item.to"
-          class="px-2.5 py-1.5 rounded-xl bg-paper-100 text-[11px] text-ink-800 border border-paper-200"
-        >
-          {{ item.name }}
+        <router-link to="/case-exam" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-purple-50 text-[#AF52DE] flex items-center justify-center font-bold text-sm">例</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">案例分析专题</div>
+              <div class="text-[11px] text-slate-400">计算公式推导 · 阅卷采分点拆解</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
         </router-link>
       </div>
-    </section>
+    </div>
+
+    <!-- Group 2: Weakness & Tooling (Inset Grouped) -->
+    <div class="ios-group">
+      <div class="ios-group-header">提分利器</div>
+      <div class="ios-card">
+        <router-link to="/practice?mode=weak" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-orange-50 text-[#FF9500] flex items-center justify-center font-bold text-sm">突</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">薄弱点智能突击</div>
+              <div class="text-[11px] text-slate-400">错题 + 薄弱考点动态智能组卷</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
+
+        <router-link to="/wrong-questions" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-rose-50 text-[#FF3B30] flex items-center justify-center font-bold text-sm">错</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">错题本与消灭</div>
+              <div class="text-[11px] text-slate-400">按考点精确筛选 · DeepSeek 白话精讲</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
+
+        <router-link to="/learn/glossary/quiz" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-teal-50 text-[#30B0C7] flex items-center justify-center font-bold text-sm">词</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">高频英语术语速测</div>
+              <div class="text-[11px] text-slate-400">10 词每日小测 · 选项标准判分</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
+
+        <router-link to="/materials" class="ios-row">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm">档</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-800">备考文库与真题</div>
+              <div class="text-[11px] text-slate-400">第 3 版官方教材 · 历年真题 PDF 阅读</div>
+            </div>
+          </div>
+          <span class="text-slate-300 font-bold text-sm">›</span>
+        </router-link>
+      </div>
+    </div>
+
+    <!-- High Frequency Keypoints Quick Links -->
+    <div class="ios-group">
+      <div class="ios-group-header">考前高频速记直达</div>
+      <div class="ios-card p-3.5">
+        <div class="flex flex-wrap gap-1.5">
+          <router-link
+            v-for="item in highFreqTopics"
+            :key="item.name"
+            :to="item.to"
+            class="px-2.5 py-1.5 rounded-xl bg-slate-50 text-xs font-medium text-slate-700 border border-slate-200/80 hover:bg-slate-100 transition"
+          >
+            {{ item.name }}
+          </router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { wrongBookApi, planApi } from '@/api'
+import { wrongBookApi, planApi, aiApi } from '@/api'
 import { useAuthStore } from '@/store/auth'
 import { isNativeApp } from '@/version'
 
@@ -157,6 +208,13 @@ const stats = ref({
 })
 
 const plan = ref<any>(null)
+const aiQuota = ref<any>(null)
+
+const todayDateStr = computed(() => {
+  const d = new Date()
+  const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${weekDays[d.getDay()]}`
+})
 
 const completedTodayCount = computed(() => {
   if (!plan.value?.today_tasks) return 0
@@ -171,13 +229,48 @@ const greeting = computed(() => {
   return '夜读'
 })
 
+// AI status capsule helpers
+const aiStatusText = computed(() => {
+  if (!aiQuota.value) return 'AI 伴学'
+  if (!aiQuota.value.global_enabled) return 'AI 维护中'
+  if (!aiQuota.value.ai_enabled) return 'AI 未开通'
+  return `AI 伴学: ${aiQuota.value.remaining}/${aiQuota.value.daily_limit}次`
+})
+
+const aiStatusClass = computed(() => {
+  if (!aiQuota.value) return 'ios-pill-gray'
+  if (!aiQuota.value.global_enabled) return 'ios-pill-orange'
+  if (!aiQuota.value.ai_enabled) return 'ios-pill-gray'
+  if (aiQuota.value.remaining === 0) return 'ios-pill-red'
+  return 'ios-pill-blue'
+})
+
+const aiDotClass = computed(() => {
+  if (!aiQuota.value) return 'bg-slate-400'
+  if (!aiQuota.value.global_enabled) return 'bg-amber-500'
+  if (!aiQuota.value.ai_enabled) return 'bg-slate-400'
+  if (aiQuota.value.remaining === 0) return 'bg-rose-500'
+  return 'bg-[#007AFF]'
+})
+
+function showAiTip() {
+  if (!aiQuota.value) return
+  if (!aiQuota.value.ai_enabled) {
+    alert('【AI 伴学未开通】\n为防止额度消耗与保障辅导质量，新学员默认关闭 AI 伴学功能。请联系管理员开启权限并分配每日额度！')
+  } else if (!aiQuota.value.global_enabled) {
+    alert('【AI 伴学维护中】\n管理员开启了全站维护模式，请稍后再试。')
+  } else {
+    alert(`【DeepSeek AI 伴学】\n今日可用额度：${aiQuota.value.daily_limit} 次\n今日已使用：${aiQuota.value.used_today} 次\n今日剩余：${aiQuota.value.remaining} 次\n每日 00:00 自动重置。`)
+  }
+}
+
 const highFreqTopics = [
-  { name: '挣值 EVM', to: '/learn/points/kp_evm_cpi' },
-  { name: '关键路径', to: '/learn/points/kp_cpm_float' },
-  { name: '整体变更', to: '/learn/points/kp_ccb_change' },
-  { name: '配置三库', to: '/learn/points/kp_ch07_config_baseline' },
+  { name: '挣值 EVM 公式', to: '/learn/points/kp_evm_cpi' },
+  { name: '关键路径 CPM', to: '/learn/points/kp_cpm_float' },
+  { name: '整体变更控制 CCB', to: '/learn/points/kp_ccb_change' },
+  { name: '配置三库基线', to: '/learn/points/kp_ch07_config_baseline' },
   { name: '进度成本四象限', to: '/learn/points/kp_ch09_quad_measures' },
-  { name: '八大绩效域', to: '/learn/points/kp_perf_domains_overview' },
+  { name: '八大绩效域精析', to: '/learn/points/kp_perf_domains_overview' },
 ]
 
 onMounted(async () => {
@@ -193,6 +286,13 @@ onMounted(async () => {
     plan.value = planRes
   } catch (err) {
     console.error('Failed to load plan', err)
+  }
+
+  try {
+    const qRes: any = await aiApi.getQuota()
+    aiQuota.value = qRes
+  } catch (err) {
+    console.error('Failed to load AI quota', err)
   }
 })
 </script>

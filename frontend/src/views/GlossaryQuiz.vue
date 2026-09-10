@@ -62,13 +62,13 @@
           <button
             v-for="opt in currentQuestion.options"
             :key="opt.key"
-            @click="selectOption(opt.text)"
+            @click="selectOption(opt.key, opt.text)"
             class="w-full min-h-[48px] text-left p-3.5 rounded-xl border text-xs leading-relaxed transition-all flex items-start space-x-3 active:scale-[0.99] touch-manipulation"
-            :class="getOptionClass(opt.text)"
+            :class="getOptionClass(opt.key)"
           >
             <span
               class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
-              :class="getBadgeClass(opt.text)"
+              :class="getBadgeClass(opt.key)"
             >
               {{ opt.key }}
             </span>
@@ -120,6 +120,7 @@
           <h2 class="text-2xl font-black font-mono text-slate-800">{{ quizResult.score }} <span class="text-sm font-normal text-slate-400">/ 100 分</span></h2>
           <p class="text-xs text-slate-500 mt-1">
             答对 <b class="text-emerald-600 font-mono">{{ quizResult.correct_count }}</b> 题 / 共 {{ quizResult.total_questions }} 题
+            <span v-if="quizResult.total_questions > 0" class="text-slate-400 font-mono">({{ Math.round((quizResult.correct_count / quizResult.total_questions) * 100) }}%)</span>
           </p>
         </div>
 
@@ -164,17 +165,21 @@
             </span>
           </div>
 
-          <!-- Answer Comparison -->
-          <div class="text-xs space-y-1 pt-1">
-            <div class="flex items-center space-x-2">
-              <span class="text-slate-400 text-[11px]">你的答案：</span>
-              <span :class="item.is_correct ? 'text-emerald-700 font-bold' : 'text-rose-600 line-through font-semibold'">
-                {{ item.selected_key || '未填' }}
-              </span>
+          <!-- Answer Comparison with option key and text -->
+          <div class="text-xs space-y-1.5 pt-1">
+            <div class="flex items-start space-x-2">
+              <span class="text-slate-400 text-[11px] shrink-0 pt-0.5">你的作答：</span>
+              <div :class="item.is_correct ? 'text-emerald-700 font-bold' : 'text-rose-600 font-semibold'">
+                <span class="font-mono mr-1">[{{ item.selected_key || '未填' }}]</span>
+                <span>{{ item.selected_text || '未作答' }}</span>
+              </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <span class="text-slate-400 text-[11px]">正确释义：</span>
-              <span class="text-emerald-700 font-bold">{{ item.correct_key }}</span>
+            <div class="flex items-start space-x-2">
+              <span class="text-slate-400 text-[11px] shrink-0 pt-0.5">正确答案：</span>
+              <div class="text-emerald-700 font-bold">
+                <span class="font-mono mr-1">[{{ item.correct_key }}]</span>
+                <span>{{ item.correct_text || item.term_zh }}</span>
+              </div>
             </div>
           </div>
 
@@ -206,7 +211,11 @@ const submitting = ref(false)
 const quizState = ref<'testing' | 'result'>('testing')
 const questions = ref<any[]>([])
 const currentIndex = ref(0)
-const answers = ref<Record<string, string>>({})
+interface QuizAnswerState {
+  key: string
+  text: string
+}
+const answers = ref<Record<string, QuizAnswerState>>({})
 const quizResult = ref<any>(null)
 
 const currentQuestion = computed(() => {
@@ -234,10 +243,10 @@ async function startNewQuiz() {
   }
 }
 
-function selectOption(text: string) {
+function selectOption(key: string, text: string) {
   triggerHaptic('tap')
   if (!currentQuestion.value) return
-  answers.value[currentQuestion.value.term_id] = text
+  answers.value[currentQuestion.value.term_id] = { key, text }
 
   // Automatically advance to next after short pause if not last
   if (currentIndex.value < questions.value.length - 1) {
@@ -259,19 +268,19 @@ function nextQuestion() {
   }
 }
 
-function getOptionClass(text: string) {
+function getOptionClass(key: string) {
   if (!currentQuestion.value) return ''
   const sel = answers.value[currentQuestion.value.term_id]
-  if (sel === text) {
+  if (sel?.key === key) {
     return 'bg-indigo-50 border-indigo-500 text-indigo-950 font-semibold shadow-xs'
   }
   return 'bg-white border-slate-200 hover:border-slate-300'
 }
 
-function getBadgeClass(text: string) {
+function getBadgeClass(key: string) {
   if (!currentQuestion.value) return ''
   const sel = answers.value[currentQuestion.value.term_id]
-  if (sel === text) {
+  if (sel?.key === key) {
     return 'bg-indigo-600 text-white'
   }
   return 'bg-slate-100 text-slate-600'
@@ -280,10 +289,15 @@ function getBadgeClass(text: string) {
 async function submitQuiz() {
   submitting.value = true
   try {
-    const payload = questions.value.map(q => ({
-      term_id: q.term_id,
-      selected_option: answers.value[q.term_id] || ''
-    }))
+    const payload = questions.value.map(q => {
+      const a = answers.value[q.term_id]
+      return {
+        term_id: q.term_id,
+        selected_key: a?.key || '',
+        selected_option: a?.text || '',
+        options: q.options || []
+      }
+    })
 
     const res = await learnApi.submitQuiz(payload)
     quizResult.value = res

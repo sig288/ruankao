@@ -55,35 +55,66 @@
         <MarkdownBody :source="point.formula_md" />
       </div>
 
-      <div v-if="point.glossary_terms?.length" class="rk-card p-4 space-y-2">
+      <div v-if="point.glossary_terms && point.glossary_terms.length > 0" class="rk-card p-4 space-y-2.5">
         <div class="flex items-center justify-between">
-          <h3 class="text-[13px] font-black text-ink-800">相关术语</h3>
-          <router-link to="/learn/glossary" class="text-[11px] text-pine-600 font-bold">词表 ›</router-link>
-        </div>
-        <router-link
-          v-for="term in point.glossary_terms"
-          :key="term.id"
-          :to="`/learn/glossary/${term.id}`"
-          class="block p-3 rounded-xl bg-paper-100 border border-paper-200"
-        >
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold font-mono text-pine-700">{{ term.term_en }}</span>
-            <span class="text-[10px] text-muted">{{ term.frequency === 'high' ? '高频' : '常用' }}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">🔤</span>
+            <h3 class="text-[13px] font-black text-ink-800">相关英语术语</h3>
           </div>
-          <div class="text-xs font-semibold text-ink-800 mt-1">{{ term.term_zh }}</div>
-        </router-link>
+          <router-link to="/learn/glossary" class="text-[11px] text-pine-600 font-bold hover:underline">全部词库 ›</router-link>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <router-link
+            v-for="term in point.glossary_terms"
+            :key="term.id"
+            :to="`/learn/glossary/${term.id}`"
+            class="p-3 rounded-xl bg-paper-100 border border-paper-200 hover:border-indigo-300 hover:bg-white transition-all block group"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black font-mono text-indigo-700 group-hover:text-indigo-900">{{ term.term_en }}</span>
+              <span
+                class="text-[9px] px-1.5 py-0.2 rounded font-bold"
+                :class="term.frequency === 'high' ? 'bg-rose-100 text-rose-700' : 'bg-paper-200 text-muted'"
+              >
+                {{ term.frequency === 'high' ? '高频' : '常用' }}
+              </span>
+            </div>
+            <div class="text-xs font-semibold text-ink-800 mt-1">{{ term.term_zh }}</div>
+            <p v-if="term.tip" class="text-[10px] text-muted truncate mt-1">{{ term.tip }}</p>
+          </router-link>
+        </div>
       </div>
 
       <div class="rk-card p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-[13px] font-black text-ink-800">相关例题</h3>
-          <span class="text-[10px] text-muted">{{ practiceQuestions.length }} 道</span>
+          <div>
+            <h3 class="text-[13px] font-black text-ink-800">相关例题</h3>
+            <p class="text-[10px] text-muted mt-0.5">真题与模拟题 · 精准匹配本考点</p>
+          </div>
+          <router-link
+            v-if="practiceQuestions.length > 0"
+            :to="{ path: '/practice', query: { point_id: point.id, title: point.title } }"
+            class="px-3 py-1.5 bg-pine-600 hover:bg-pine-700 text-paper-50 rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1"
+          >
+            <span>开始刷题 ({{ practiceQuestions.length }})</span>
+            <span>›</span>
+          </router-link>
+          <button
+            v-else
+            disabled
+            class="px-2.5 py-1 bg-paper-100 text-muted rounded-lg text-xs font-medium cursor-not-allowed opacity-60"
+          >
+            暂无例题
+          </button>
         </div>
 
         <div v-if="practiceLoading" class="text-center py-6 text-muted text-xs">调取例题…</div>
-        <div v-else-if="practiceQuestions.length === 0" class="py-4 text-center text-xs text-muted">
-          <p>该考点暂无单独例题</p>
-          <router-link to="/practice" class="inline-block mt-2 font-bold text-pine-600">去章节练 ›</router-link>
+        <div v-else-if="practiceQuestions.length === 0" class="py-6 text-center text-xs text-muted bg-paper-50 rounded-xl border border-dashed border-paper-200">
+          <p class="font-medium text-ink-700">该考点题库正在收录中</p>
+          <p class="text-[10px] text-muted mt-1">您可以前往章节题库进行综合强化训练</p>
+          <router-link to="/practice" class="inline-block mt-3 px-3 py-1.5 bg-paper-100 text-pine-700 font-bold rounded-lg border border-paper-200 hover:bg-paper-200 transition-colors">
+            去章节练习 ›
+          </router-link>
         </div>
         <div v-else class="space-y-3">
           <div v-for="(q, qIdx) in practiceQuestions" :key="q.id" class="p-3 rounded-xl border border-paper-200 bg-paper-100/50 space-y-2">

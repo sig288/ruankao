@@ -1,90 +1,99 @@
 <template>
-  <div class="rk-page">
-    <!-- Header with Filter -->
-    <div class="rk-card p-3.5 flex items-center justify-between">
-      <div>
-        <h2 class="text-sm font-black text-slate-800">错题本与弱点消灭</h2>
-        <p class="text-[10px] text-slate-400">自动沉淀日常练习与模考失误题</p>
-      </div>
+  <div class="ios-page space-y-3.5">
+    <!-- Header with Segmented Filter -->
+    <div class="ios-card p-3.5 space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">错题本与弱点消灭</h2>
+          <p class="text-xs text-slate-400 mt-0.5">自动沉淀日常练习与模考答错题</p>
+        </div>
 
-      <div class="flex items-center space-x-1.5">
         <select
           v-if="availableKnowledges.length > 0"
           v-model="selectedKnowledge"
           @change="loadWrongQuestions()"
-          class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-700 max-w-[120px] truncate"
+          class="text-xs bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 max-w-[130px] truncate focus:outline-none"
         >
-          <option value="">全部考点</option>
+          <option value="">全部知识点</option>
           <option v-for="k in availableKnowledges" :key="k" :value="k">{{ k }}</option>
         </select>
+      </div>
 
+      <!-- iOS Segmented Control -->
+      <div class="ios-segmented">
         <button
-          @click="filterMastered = filterMastered === false ? null : false; loadWrongQuestions()"
-          class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-          :class="filterMastered === false ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600'"
+          class="ios-segmented-item"
+          :class="{ 'is-active': filterMastered === null }"
+          @click="filterMastered = null; loadWrongQuestions()"
         >
-          未掌握
+          全部错题
         </button>
         <button
-          @click="filterMastered = null; loadWrongQuestions()"
-          class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-          :class="filterMastered === null ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'"
+          class="ios-segmented-item"
+          :class="{ 'is-active': filterMastered === false }"
+          @click="filterMastered = false; loadWrongQuestions()"
         >
-          全部
+          未消灭 ({{ unmasteredCount }})
+        </button>
+        <button
+          class="ios-segmented-item"
+          :class="{ 'is-active': filterMastered === true }"
+          @click="filterMastered = true; loadWrongQuestions()"
+        >
+          已掌握
         </button>
       </div>
     </div>
 
-    <!-- Weak Drill CTA Banner -->
-    <div v-if="items.some(x => !x.is_mastered)" class="bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl p-3 text-white flex items-center justify-between shadow-sm">
-      <div class="flex items-center space-x-2 text-xs">
-        <span class="text-base">🔥</span>
-        <div>
-          <div class="font-bold">错题专项靶向突击</div>
-          <div class="text-[10px] text-rose-100">自动抽选当前未消灭错题组卷实战</div>
-        </div>
+    <!-- Target Weak Drill Banner -->
+    <div v-if="items.some(x => !x.is_mastered)" class="ios-card bg-[#007AFF] text-white p-4 flex items-center justify-between shadow-sm">
+      <div>
+        <div class="font-bold text-sm">错题智能靶向突击</div>
+        <div class="text-xs text-blue-100 mt-0.5">抽选当前薄弱与未消灭考题组卷突破</div>
       </div>
       <router-link
         to="/practice?mode=weak"
-        class="px-3 py-1.5 bg-white text-rose-600 rounded-xl text-xs font-bold shadow hover:bg-rose-50 active:scale-95 transition-all"
+        class="px-3.5 py-1.5 bg-white text-[#007AFF] rounded-full text-xs font-bold shadow-sm active:scale-95 transition"
       >
-        去刷弱项
+        去消灭 ›
       </router-link>
     </div>
 
-    <!-- Empty State -->
+    <!-- Loading State -->
     <div v-if="loading" class="text-center py-16 text-slate-400 text-sm">
       正在检索错题本...
     </div>
-    <div v-else-if="items.length === 0" class="bg-white rounded-2xl p-10 text-center text-slate-500 border border-slate-200">
-      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+
+    <!-- Empty State -->
+    <div v-else-if="items.length === 0" class="ios-card p-10 text-center text-slate-500">
+      <div class="w-12 h-12 bg-emerald-50 text-[#34C759] rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
         ✓
       </div>
-      <p class="text-sm font-bold text-slate-700">暂无需要消灭的错题</p>
-      <p class="text-xs text-slate-400 mt-1">继续刷题或模拟考，巩固薄弱点！</p>
+      <p class="text-sm font-bold text-slate-800">暂无需要消灭的错题</p>
+      <p class="text-xs text-slate-400 mt-1">恭喜！错题库已全部掌握或暂无错题记录。</p>
     </div>
 
     <!-- Wrong Questions List -->
-    <div v-else class="space-y-4">
+    <div v-else class="space-y-3.5">
       <div
         v-for="item in items"
         :key="item.id"
-        class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3 relative"
-        :class="{ 'opacity-60 bg-slate-50/80': item.is_mastered }"
+        class="ios-card p-4 space-y-3 relative transition-all"
+        :class="{ 'opacity-65 bg-slate-50/80': item.is_mastered }"
       >
-        <!-- Top Badges & Actions -->
+        <!-- Card Top Badges & Actions -->
         <div class="flex items-center justify-between text-xs">
-          <div class="flex items-center space-x-1.5">
-            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium text-[11px]">{{ item.knowledge }}</span>
-            <span class="px-1.5 py-0.2 bg-rose-50 text-rose-600 font-bold rounded text-[10px]">做错 {{ item.wrong_count }} 次</span>
+          <div class="flex items-center space-x-1.5 flex-wrap">
+            <span class="ios-pill ios-pill-blue">{{ item.knowledge }}</span>
+            <span class="ios-pill ios-pill-red">做错 {{ item.wrong_count }} 次</span>
           </div>
 
           <div class="flex items-center space-x-2">
-            <!-- Go Consolidate Button (A-US6) -->
+            <!-- Go Consolidate Button -->
             <router-link
               v-if="item.knowledge_point_ids && item.knowledge_point_ids.length > 0"
               :to="`/learn/points/${item.knowledge_point_ids[0]}`"
-              class="text-xs px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 flex items-center space-x-0.5 transition-colors"
+              class="ios-btn-secondary px-2.5 py-1 text-xs font-semibold rounded-lg"
             >
               <span>去巩固</span>
               <span>›</span>
@@ -92,83 +101,66 @@
             <router-link
               v-else
               :to="`/practice?knowledge=${encodeURIComponent(item.knowledge)}`"
-              class="text-xs px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 flex items-center space-x-0.5 transition-colors"
+              class="ios-btn-secondary px-2.5 py-1 text-xs font-semibold rounded-lg"
             >
               <span>去巩固</span>
               <span>›</span>
             </router-link>
 
+            <!-- Toggle Mastered Button -->
             <button
               @click="toggleMaster(item)"
-              class="text-xs px-2 py-1 rounded-lg font-medium transition-colors"
-              :class="item.is_mastered ? 'bg-slate-200 text-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
+              class="text-xs px-2 py-1 rounded-lg border transition-colors"
+              :class="item.is_mastered ? 'bg-emerald-50 text-[#34C759] border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200 hover:text-slate-800'"
             >
-              {{ item.is_mastered ? '重标未掌握' : '标为已掌握' }}
-            </button>
-            <button
-              @click="deleteWrong(item.id)"
-              class="text-xs text-slate-300 hover:text-red-500 transition-colors p-1"
-              title="移出错题本"
-            >
-              ✕
+              {{ item.is_mastered ? '已掌握 ✓' : '标记已掌握' }}
             </button>
           </div>
         </div>
 
         <!-- Stem -->
-        <div class="text-xs font-semibold text-slate-800 leading-relaxed">
+        <div class="text-sm font-semibold text-slate-800 leading-relaxed">
           {{ item.stem }}
         </div>
 
-        <!-- Options if basic -->
-        <div v-if="item.options" class="space-y-1 bg-slate-50/70 p-2.5 rounded-xl text-[11px] text-slate-600">
-          <div v-for="(opt, oIdx) in item.options" :key="oIdx">
-            {{ opt }}
+        <!-- Answer Comparison Box -->
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-rose-600 font-semibold">上次作答：{{ item.last_answer || '未作答' }}</span>
+            <span class="text-emerald-700 font-bold font-mono">标准正确答案：{{ item.correct_answer }}</span>
           </div>
+          <p v-if="item.analysis" class="text-slate-600 pt-1 text-[11px] leading-normal border-t border-slate-200/60 mt-1 whitespace-pre-line">
+            {{ item.analysis }}
+          </p>
         </div>
 
-        <!-- Answer comparison -->
-        <div class="flex items-center space-x-4 text-xs pt-1">
-          <span class="text-rose-600">你的上次答案：<b>{{ item.user_answer || '未填' }}</b></span>
-          <span class="text-emerald-600">正确答案：<b>{{ item.correct_answer }}</b></span>
-        </div>
-
-        <!-- Analysis -->
-        <div class="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 leading-relaxed">
-          <span class="font-bold text-slate-700">解析：</span>{{ item.analysis }}
-        </div>
-
-        <!-- External AI Agent Explanation Card -->
-        <div
-          v-if="item.agent_explanation"
-          class="bg-gradient-to-br from-indigo-50/90 to-blue-50/70 border border-indigo-200 rounded-xl p-3.5 text-xs text-indigo-950 space-y-1.5 shadow-sm"
-        >
-          <div class="flex items-center space-x-1.5 text-indigo-700 font-bold text-[11px]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>外部 Agent 助教深度讲解与记忆锦囊</span>
-          </div>
-          <div class="leading-relaxed whitespace-pre-line text-slate-700 text-[11px] pt-1 border-t border-indigo-100">
-            {{ item.agent_explanation }}
-          </div>
-        </div>
-
-        <!-- DeepSeek AI Study Companion (M7 / A1~A3) -->
+        <!-- P0 DeepSeek AI Companion Assist Panel -->
         <AiAssistPanel
-          :question="item"
-          :user-answer="item.user_answer"
+          :question-id="item.question_id"
+          :initial-explanation="item.agent_explanation"
+          :initial-mnemonic="item.ai_mnemonic"
+          :is-case="false"
         />
+
+        <!-- Footer Meta -->
+        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+          <span>最近答错：{{ formatDate(item.last_wrong_at) }}</span>
+          <button
+            @click="deleteWrongItem(item.id)"
+            class="text-slate-400 hover:text-rose-500 transition"
+          >
+            移除此错题
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { wrongBookApi } from '@/api'
 import AiAssistPanel from '@/components/AiAssistPanel.vue'
-import { haptics } from '@/utils/haptics'
 
 const items = ref<any[]>([])
 const loading = ref(false)
@@ -176,20 +168,30 @@ const filterMastered = ref<boolean | null>(false)
 const selectedKnowledge = ref<string>('')
 const availableKnowledges = ref<string[]>([])
 
+const unmasteredCount = computed(() => {
+  return items.value.filter(x => !x.is_mastered).length
+})
+
 async function loadWrongQuestions() {
   loading.value = true
   try {
-    const params: any = { limit: 100 }
+    const params: any = {}
     if (filterMastered.value !== null) {
-      params.is_mastered = filterMastered.value
+      params.mastered = filterMastered.value
     }
     if (selectedKnowledge.value) {
       params.knowledge = selectedKnowledge.value
     }
     const res: any = await wrongBookApi.listWrong(params)
-    items.value = res.items || []
-    if (res.available_knowledges) {
-      availableKnowledges.value = res.available_knowledges
+    items.value = res
+
+    // Extract unique knowledge points for the filter dropdown
+    if (availableKnowledges.value.length === 0 && Array.isArray(res)) {
+      const kSet = new Set<string>()
+      res.forEach(item => {
+        if (item.knowledge) kSet.add(item.knowledge)
+      })
+      availableKnowledges.value = Array.from(kSet)
     }
   } catch (err) {
     console.error('Failed to load wrong questions', err)
@@ -199,25 +201,29 @@ async function loadWrongQuestions() {
 }
 
 async function toggleMaster(item: any) {
+  const target = !item.is_mastered
   try {
-    const newStatus = !item.is_mastered
-    await wrongBookApi.toggleMaster(item.id, newStatus)
-    item.is_mastered = newStatus
-    haptics.selection()
+    await wrongBookApi.toggleMaster(item.id, target)
+    item.is_mastered = target
   } catch (err) {
-    console.error('Toggle master failed', err)
+    alert('操作失败')
   }
 }
 
-async function deleteWrong(id: string) {
-  if (!confirm('确认从错题本中移除该题吗？')) return
+async function deleteWrongItem(id: string) {
+  if (!confirm('确定将此题从错题本中移除吗？')) return
   try {
     await wrongBookApi.deleteWrong(id)
-    items.value = items.value.filter((x) => x.id !== id)
-    haptics.heavy()
+    items.value = items.value.filter(x => x.id !== id)
   } catch (err) {
-    console.error('Delete wrong failed', err)
+    alert('删除失败')
   }
+}
+
+function formatDate(dtStr: string) {
+  if (!dtStr) return ''
+  const d = new Date(dtStr)
+  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
 onMounted(() => {

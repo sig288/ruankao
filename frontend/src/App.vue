@@ -3,10 +3,10 @@
     <div class="app-shell">
       <header v-if="showBar" class="app-header">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5 min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
             <button
               v-if="canGoPageBack"
-              class="w-8 h-8 rounded-xl bg-white/10 text-paper-50 flex items-center justify-center shrink-0 text-lg leading-none"
+              class="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 active:scale-90 text-slate-800 flex items-center justify-center shrink-0 text-xl font-medium leading-none transition"
               aria-label="返回上一页"
               @click="goPageBack"
             >
@@ -14,26 +14,26 @@
             </button>
             <div
               v-else
-              class="w-8 h-8 rounded-xl bg-paper-100 text-ink-800 flex items-center justify-center text-[11px] font-black tracking-tight shrink-0"
+              class="w-8 h-8 rounded-xl bg-[#007AFF] text-white flex items-center justify-center text-[12px] font-bold tracking-tight shrink-0 shadow-sm"
             >
               中项
             </div>
             <div class="min-w-0">
-              <h1 class="text-[13px] font-black leading-none truncate text-paper-50">{{ pageTitle }}</h1>
-              <p class="text-[10px] text-paper-300 mt-0.5 truncate">第3版大纲 · 系统集成</p>
+              <h1 class="text-[14px] font-bold leading-none truncate text-slate-900">{{ pageTitle }}</h1>
+              <p class="text-[10px] text-slate-400 mt-0.5 truncate font-medium">第3版大纲 · 官方教程</p>
             </div>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-1.5 shrink-0">
             <router-link
               v-if="!inApp"
               to="/download"
-              class="text-[10px] px-2 py-1 rounded-lg bg-white/10 text-paper-100 border border-white/15"
+              class="text-[11px] px-2.5 py-1 rounded-full bg-slate-200/70 hover:bg-slate-300 text-slate-700 font-medium transition"
             >
               下载
             </router-link>
             <button
-              class="text-[10px] px-2 py-1 rounded-lg bg-white/10 text-paper-100 border border-white/15 disabled:opacity-50"
+              class="text-[11px] px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold transition disabled:opacity-50"
               :disabled="checkingUpdate"
               @click="checkForUpdate(false)"
             >
@@ -42,12 +42,12 @@
             <router-link
               v-if="authStore.isAdmin"
               to="/admin"
-              class="text-[10px] px-2 py-1 rounded-lg bg-white/10 text-paper-100 border border-white/15"
+              class="text-[11px] px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 font-semibold transition"
             >
               管理
             </router-link>
             <button
-              class="text-[10px] text-paper-300 active:text-cinnabar-100"
+              class="text-[11px] px-2 py-1 text-slate-400 hover:text-rose-500 active:text-rose-600 transition font-medium"
               @click="handleLogout"
             >
               退出
@@ -71,7 +71,7 @@
           <span>首页</span>
         </router-link>
 
-        <router-link to="/learn/points" class="tab-item" :class="{ 'is-active': isLearn }">
+        <router-link to="/learn/points" class="tab-item" :class="{ 'is-active': isLearn }" @click="$router.push('/learn/points')">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>

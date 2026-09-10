@@ -185,8 +185,8 @@ async function toggleFavorite() {
   if (!term.value) return
   const nextFav = !term.value.favorited
   try {
-    await learnApi.updateGlossaryStatus(termId, { favorited: nextFav })
-    term.value.favorited = nextFav
+    const res = await learnApi.updateGlossaryStatus(termId, { favorited: nextFav })
+    term.value.favorited = res.favorited !== undefined ? res.favorited : nextFav
   } catch (err) {
     console.error(err)
   }
@@ -197,8 +197,8 @@ async function setKnown(target: string) {
   if (!term.value) return
   const nextKnown = term.value.known === target ? 'unknown' : target
   try {
-    await learnApi.updateGlossaryStatus(termId, { known: nextKnown })
-    term.value.known = nextKnown
+    const res = await learnApi.updateGlossaryStatus(termId, { known: nextKnown })
+    term.value.known = res.known ?? nextKnown
     if (nextKnown === 'know') {
       triggerHaptic('success')
     }

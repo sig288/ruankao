@@ -1,3 +1,5 @@
+@import './theme-ios.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,31 +55,34 @@ body {
 
 .app-root {
   min-height: 100dvh;
-  background: var(--ink-deep);
+  background: #e5e5ea;
 }
 
 .app-shell {
   width: 100%;
-  max-width: 28rem;
+  max-width: 30rem;
   margin: 0 auto;
   min-height: 100dvh;
-  background: var(--paper);
+  background: var(--ios-bg);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 40px rgba(18, 36, 30, 0.35);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
 }
 
 .app-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  padding-top: calc(var(--sat) + 6px);
-  padding-bottom: 10px;
+  padding-top: calc(var(--sat) + 4px);
+  padding-bottom: 8px;
   padding-left: calc(16px + var(--sal));
   padding-right: calc(16px + var(--sar));
-  background: var(--ink-mid);
-  color: var(--paper);
+  background: rgba(242, 242, 247, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--ios-separator);
+  color: var(--ios-text-primary);
 }
 
 .app-main {
@@ -106,19 +111,19 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 28rem;
+  max-width: 30rem;
   z-index: 40;
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
-  padding-top: 6px;
-  padding-bottom: calc(var(--sab) + 6px);
+  padding-top: 5px;
+  padding-bottom: calc(var(--sab) + 5px);
   padding-left: var(--sal);
   padding-right: var(--sar);
-  background: rgba(255, 251, 244, 0.94);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-top: 1px solid var(--paper-line);
+  background: rgba(249, 249, 249, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 0.5px solid var(--ios-separator);
 }
 
 .tab-item {
@@ -129,18 +134,23 @@ body {
   justify-content: center;
   min-height: 44px;
   gap: 2px;
-  color: var(--muted);
+  color: var(--ios-text-secondary);
+  font-size: 10px;
+  font-weight: 500;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .tab-item.is-active {
-  color: var(--pine);
+  color: var(--ios-blue);
+  font-weight: 600;
 }
 
 .tab-item svg {
   width: 22px;
   height: 22px;
 }
+
 
 .tab-item span {
   font-size: 10px;
@@ -237,6 +247,41 @@ body {
   color: var(--pine);
   padding: 1px 5px;
   border-radius: 6px;
+}
+.md-body blockquote {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: var(--paper-warm);
+  border-left: 3.5px solid var(--pine);
+  border-radius: 0 8px 8px 0;
+  color: var(--ink-mid);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.md-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.md-body th,
+.md-body td {
+  padding: 7px 10px;
+  border: 1px solid var(--paper-line);
+  text-align: left;
+}
+.md-body th {
+  background: var(--paper-warm);
+  font-weight: 700;
+  color: var(--ink);
+}
+.md-body hr {
+  border: 0;
+  height: 1px;
+  background: var(--paper-line);
+  margin: 12px 0;
 }
 
 .rk-toast {
