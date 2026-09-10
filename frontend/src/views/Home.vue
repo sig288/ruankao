@@ -232,35 +232,35 @@ const greeting = computed(() => {
 // AI status capsule helpers
 const aiStatusText = computed(() => {
   if (!aiQuota.value) return 'AI 伴学'
-  if (!aiQuota.value.global_enabled) return 'AI 维护中'
-  if (!aiQuota.value.ai_enabled) return 'AI 未开通'
+  if (aiQuota.value.global_enabled === false) return 'AI 维护中'
+  if (aiQuota.value.ai_enabled === false) return 'AI 未开通'
   return `AI 伴学: ${aiQuota.value.remaining}/${aiQuota.value.daily_limit}次`
 })
 
 const aiStatusClass = computed(() => {
   if (!aiQuota.value) return 'ios-pill-gray'
-  if (!aiQuota.value.global_enabled) return 'ios-pill-orange'
-  if (!aiQuota.value.ai_enabled) return 'ios-pill-gray'
+  if (aiQuota.value.global_enabled === false) return 'ios-pill-orange'
+  if (aiQuota.value.ai_enabled === false) return 'ios-pill-gray'
   if (aiQuota.value.remaining === 0) return 'ios-pill-red'
   return 'ios-pill-blue'
 })
 
 const aiDotClass = computed(() => {
   if (!aiQuota.value) return 'bg-slate-400'
-  if (!aiQuota.value.global_enabled) return 'bg-amber-500'
-  if (!aiQuota.value.ai_enabled) return 'bg-slate-400'
+  if (aiQuota.value.global_enabled === false) return 'bg-amber-500'
+  if (aiQuota.value.ai_enabled === false) return 'bg-slate-400'
   if (aiQuota.value.remaining === 0) return 'bg-rose-500'
   return 'bg-[#007AFF]'
 })
 
 function showAiTip() {
   if (!aiQuota.value) return
-  if (!aiQuota.value.ai_enabled) {
-    alert('【AI 伴学未开通】\n为防止额度消耗与保障辅导质量，新学员默认关闭 AI 伴学功能。请联系管理员开启权限并分配每日额度！')
-  } else if (!aiQuota.value.global_enabled) {
+  if (aiQuota.value.ai_enabled === false) {
+    alert('【AI 伴学未开通】\n为防止额度消耗与保障辅导质量，新学员默认关闭 AI 伴学功能。请联系管理员开启权限并分配额度！')
+  } else if (aiQuota.value.global_enabled === false) {
     alert('【AI 伴学维护中】\n管理员开启了全站维护模式，请稍后再试。')
   } else {
-    alert(`【DeepSeek AI 伴学】\n今日可用额度：${aiQuota.value.daily_limit} 次\n今日已使用：${aiQuota.value.used_today} 次\n今日剩余：${aiQuota.value.remaining} 次\n每日 00:00 自动重置。`)
+    alert(`【DeepSeek AI 伴学】\n可用额度：${aiQuota.value.daily_limit} 次\n已使用：${aiQuota.value.used_today} 次\n剩余：${aiQuota.value.remaining} 次`)
   }
 }
 

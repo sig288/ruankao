@@ -139,6 +139,10 @@ def get_daily_quota(
     now = datetime.now(timezone.utc)
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
 
+    user_ai_enabled = getattr(current_user, "ai_enabled", True)
+    if user_ai_enabled is None:
+        user_ai_enabled = True
+
     if current_user.ai_quota is not None:
         used_total = (
             db.query(func.count(AiJob.id))
@@ -151,7 +155,9 @@ def get_daily_quota(
             "daily_limit": limit,
             "used_today": used_total,
             "remaining": remaining,
-            "has_api_key": bool(settings.DEEPSEEK_API_KEY)
+            "has_api_key": bool(settings.DEEPSEEK_API_KEY),
+            "ai_enabled": bool(user_ai_enabled),
+            "global_enabled": True
         }
     else:
         used_today = (
@@ -164,7 +170,9 @@ def get_daily_quota(
             "daily_limit": settings.AI_DAILY_QUOTA,
             "used_today": used_today,
             "remaining": remaining,
-            "has_api_key": bool(settings.DEEPSEEK_API_KEY)
+            "has_api_key": bool(settings.DEEPSEEK_API_KEY),
+            "ai_enabled": bool(user_ai_enabled),
+            "global_enabled": True
         }
 
 @router.post("/jobs", response_model=AiJobOut)
@@ -182,6 +190,13 @@ def create_ai_job(
     """
     now = datetime.now(timezone.utc)
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+
+    user_ai_enabled = getattr(current_user, "ai_enabled", True)
+    if user_ai_enabled is False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="您的 AI 伴学权限未开通，请联系管理员！"
+        )
 
     # 1. Check quota
     if current_user.ai_quota is not None:

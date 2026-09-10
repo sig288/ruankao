@@ -15,6 +15,8 @@ class UserOut(BaseModel):
     username: str
     role: str
     ai_quota: Optional[int] = None
+    is_active: bool = True
+    ai_enabled: bool = True
     created_at: Optional[datetime] = None
 
     class Config:

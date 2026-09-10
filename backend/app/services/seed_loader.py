@@ -58,6 +58,12 @@ def ensure_schema_migrations(db: Session):
             if "ai_quota" not in user_cols:
                 db.execute(text("ALTER TABLE users ADD COLUMN ai_quota INTEGER"))
                 logger.info("Migrated users table: added ai_quota")
+            if "is_active" not in user_cols:
+                db.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+                logger.info("Migrated users table: added is_active")
+            if "ai_enabled" not in user_cols:
+                db.execute(text("ALTER TABLE users ADD COLUMN ai_enabled BOOLEAN DEFAULT 1"))
+                logger.info("Migrated users table: added ai_enabled")
             db.commit()
     except Exception as e:
         logger.warning(f"Schema migration note: {e}")
@@ -142,7 +148,9 @@ def init_seed_data(db: Session):
             username="wwr",
             hashed_password=get_password_hash("mko0nji9"),
             role="user",
-            ai_quota=50000
+            ai_quota=50000,
+            is_active=True,
+            ai_enabled=True
         )
         db.add(wwr_user)
         db.commit()
@@ -150,8 +158,31 @@ def init_seed_data(db: Session):
     else:
         wwr_user.hashed_password = get_password_hash("mko0nji9")
         wwr_user.ai_quota = 50000
+        wwr_user.is_active = True
+        wwr_user.ai_enabled = True
         db.commit()
         logger.info("Updated user wwr credentials and set AI quota to 50000.")
+
+    # 1.2 Ensure user sig288 (ai_quota=5000)
+    sig288_user = db.query(User).filter(User.username == "sig288").first()
+    if sig288_user:
+        sig288_user.ai_quota = 5000
+        sig288_user.ai_enabled = True
+        sig288_user.is_active = True
+        db.commit()
+        logger.info("Updated user sig288 AI quota to 5000.")
+    else:
+        sig288_user = User(
+            username="sig288",
+            hashed_password=get_password_hash("Password123!"),
+            role="user",
+            ai_quota=5000,
+            is_active=True,
+            ai_enabled=True
+        )
+        db.add(sig288_user)
+        db.commit()
+        logger.info("Initialized user sig288 with 5000 AI quota.")
 
     # 2. Initialize default Agent API Key if provided in environment
     if settings.DEFAULT_AGENT_KEY:

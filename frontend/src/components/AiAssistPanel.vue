@@ -208,7 +208,7 @@ onMounted(async () => {
     const quota = await aiApi.getQuota() as any
     remainingQuota.value = quota.remaining
     dailyLimit.value = quota.daily_limit
-    isAiEnabled.value = !!quota.ai_enabled
+    isAiEnabled.value = quota.ai_enabled !== false
   } catch (e) {
     // ignore
   }
