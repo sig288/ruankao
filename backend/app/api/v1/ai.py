@@ -1,10 +1,8 @@
-from datetime import datetime, timezone, timedelta
 import os
 import json
 import uuid
-import urllib.request
-import urllib.error
-import ssl
+import re
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
@@ -18,8 +16,43 @@ from app.models.question import Question
 from app.models.wrong_question import WrongQuestion
 from app.models.ai_job import AiJob
 from app.api.deps import get_current_user
+from app.services.ai_config import load_ai_settings, call_deepseek_api, get_active_api_key
 
 router = APIRouter()
+
+def clean_ai_response(text: Optional[str]) -> str:
+    """
+    Cleans raw AI response:
+    1. Removes ```markdown or ``` wrapper fences
+    2. Strips leading conversational chatter/greetings
+    3. Normalizes extra leading/trailing whitespace
+    """
+    if not text:
+        return ""
+    s = text.strip()
+    fence_match = re.match(r"^```(?:markdown|md)?\s*\n([\s\S]*?)\n```\s*$", s, re.IGNORECASE)
+    if fence_match:
+        s = fence_match.group(1).strip()
+
+    lines = s.split("\n")
+    start_idx = 0
+    chatter_keywords = (
+        "好的", "当然", "没问题", "各位同学", "大家好", "同学们", "你好", "您好",
+        "针对这道", "对于这道", "收到", "请看", "下面是", "以下是", "作为软考", "这道题主要考查"
+    )
+    for i, l in enumerate(lines):
+        trimmed = l.strip()
+        if not trimmed:
+            continue
+        if start_idx == i and not (trimmed.startswith("#") or trimmed.startswith(">") or trimmed.startswith("*") or trimmed.startswith("-") or trimmed.startswith("|")):
+            if any(trimmed.startswith(k) for k in chatter_keywords) and i + 1 < len(lines):
+                start_idx = i + 1
+                continue
+        break
+    if start_idx > 0 and start_idx < len(lines):
+        s = "\n".join(lines[start_idx:]).strip()
+
+    return s
 
 class CreateAiJobIn(BaseModel):
     question_id: Optional[str] = None
@@ -35,48 +68,6 @@ class AiJobOut(BaseModel):
     parsed_data: Optional[Dict[str, Any]] = None
     created_at: datetime
     remaining_quota: int
-
-def call_deepseek_api(prompt: str, system_prompt: str) -> Optional[str]:
-    """
-    Server-side direct call to DeepSeek Chat API.
-    Gracefully returns None if DEEPSEEK_API_KEY is not configured or network error occurs.
-    """
-    api_key = settings.DEEPSEEK_API_KEY
-    if not api_key:
-        return None
-
-    url = f"{settings.DEEPSEEK_BASE_URL.rstrip('/')}/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
-    payload = {
-        "model": settings.DEEPSEEK_MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.3,
-        "max_tokens": 1000
-    }
-
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
-    try:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers=headers,
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=25, context=ctx) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        print(f"[DeepSeek API Call Failed]: {e}")
-        return None
 
 def fallback_ai_generation(action_type: str, question: Optional[Question], user_context: Optional[Dict[str, Any]]) -> str:
     """
@@ -143,6 +134,10 @@ def get_daily_quota(
     if user_ai_enabled is None:
         user_ai_enabled = True
 
+    ai_cfg = load_ai_settings(masked=False)
+    has_api_key = bool(get_active_api_key())
+    global_enabled = bool(ai_cfg.get("global_enabled", True))
+
     if current_user.ai_quota is not None:
         used_total = (
             db.query(func.count(AiJob.id))
@@ -155,9 +150,9 @@ def get_daily_quota(
             "daily_limit": limit,
             "used_today": used_total,
             "remaining": remaining,
-            "has_api_key": bool(settings.DEEPSEEK_API_KEY),
+            "has_api_key": has_api_key,
             "ai_enabled": bool(user_ai_enabled),
-            "global_enabled": True
+            "global_enabled": global_enabled
         }
     else:
         used_today = (
@@ -165,14 +160,15 @@ def get_daily_quota(
             .filter(AiJob.user_id == current_user.id, AiJob.created_at >= today_start)
             .scalar()
         ) or 0
-        remaining = max(0, settings.AI_DAILY_QUOTA - used_today)
+        default_limit = int(ai_cfg.get("default_daily_quota", settings.AI_DAILY_QUOTA))
+        remaining = max(0, default_limit - used_today)
         return {
-            "daily_limit": settings.AI_DAILY_QUOTA,
+            "daily_limit": default_limit,
             "used_today": used_today,
             "remaining": remaining,
-            "has_api_key": bool(settings.DEEPSEEK_API_KEY),
+            "has_api_key": has_api_key,
             "ai_enabled": bool(user_ai_enabled),
-            "global_enabled": True
+            "global_enabled": global_enabled
         }
 
 @router.post("/jobs", response_model=AiJobOut)
@@ -266,6 +262,8 @@ def create_ai_job(
     ai_response = call_deepseek_api(user_query, system_prompt)
     if not ai_response:
         ai_response = fallback_ai_generation(job_in.action_type, question, job_in.user_context)
+
+    ai_response = clean_ai_response(ai_response)
 
     # 5. Save AiJob record
     job = AiJob(
